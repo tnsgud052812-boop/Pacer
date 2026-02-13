@@ -866,10 +866,18 @@
             document.getElementById('teamModal').classList.add('active');
         }
 
+        // 선택된 멤버 상태 저장용
+        let currentSelectedMembers = new Set();
+
         // 멤버 체크박스 렌더링
-        function renderMemberCheckboxes(selectedMembers) {
+        function renderMemberCheckboxes(selectedMembers, keepSelection = false) {
             const container = document.getElementById('memberSelectList');
             const search = document.getElementById('memberSearch').value.toLowerCase();
+            
+            // 초기 로드시에만 selectedMembers로 초기화
+            if (!keepSelection) {
+                currentSelectedMembers = new Set(selectedMembers);
+            }
             
             // 이미 다른 팀에 배정된 멤버 찾기
             const assignedMembers = new Set();
@@ -885,13 +893,14 @@
             
             container.innerHTML = filtered.map(member => {
                 const isAssigned = assignedMembers.has(member);
-                const isChecked = selectedMembers.includes(member);
+                const isChecked = currentSelectedMembers.has(member);
                 
                 return `
                     <label class="member-checkbox" style="${isAssigned && !isChecked ? 'opacity:0.4' : ''}">
                         <input type="checkbox" value="${member}" 
                             ${isChecked ? 'checked' : ''} 
-                            ${isAssigned && !isChecked ? 'disabled' : ''}>
+                            ${isAssigned && !isChecked ? 'disabled' : ''}
+                            onchange="toggleMemberSelection('${member}', this.checked)">
                         <span>${member}</span>
                         ${isAssigned && !isChecked ? '<span style="color:#f87171;font-size:0.75rem;margin-left:auto">다른팀</span>' : ''}
                     </label>
@@ -899,10 +908,18 @@
             }).join('');
         }
 
+        // 멤버 선택 토글
+        function toggleMemberSelection(member, checked) {
+            if (checked) {
+                currentSelectedMembers.add(member);
+            } else {
+                currentSelectedMembers.delete(member);
+            }
+        }
+
         // 멤버 필터
         function filterMembers() {
-            const currentChecked = [...document.querySelectorAll('#memberSelectList input:checked')].map(i => i.value);
-            renderMemberCheckboxes(currentChecked);
+            renderMemberCheckboxes([], true);
         }
 
         // 팀 저장
@@ -913,7 +930,7 @@
                 return;
             }
             
-            const selectedMembers = [...document.querySelectorAll('#memberSelectList input:checked')].map(i => i.value);
+            const selectedMembers = [...currentSelectedMembers];
             
             const group = config.groups.find(g => g.id === editingGroupIdForTeam);
             if (!group) return;
