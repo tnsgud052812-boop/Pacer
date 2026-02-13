@@ -1,9 +1,9 @@
 name: Pacer 일별 크롤링
 
 on:
-  # 매일 23:59 KST (= 14:58 UTC)
+  # 매일 23:59 KST (= 14:59 UTC)
   schedule:
-    - cron: '59 23 * * *'
+    - cron: '59 14 * * *'
   
   # 수동 실행 (테스트용)
   workflow_dispatch:
