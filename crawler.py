@@ -7,13 +7,21 @@ Pacer 만보걷기 크롤러
 import requests
 import csv
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
 # 설정
 GROUP_ID = 31844011
 BASE_URL = "https://www.mypacer.com/api/v1/leaderboard"
 REFERER = "https://www.mypacer.com/clubs/1n3qqmrn/-ju-kaentabseu-suwon-gyeonggi-do"
+
+# 한국 시간대 (UTC+9)
+KST = timezone(timedelta(hours=9))
+
+
+def get_kst_now():
+    """한국 시간 반환"""
+    return datetime.now(KST)
 
 
 def crawl_pacer_data() -> List[Dict]:
@@ -93,8 +101,8 @@ def update_member_file(name: str, date_str: str, daily_steps: int, monthly_total
     """개인별 월간 파일 업데이트"""
     os.makedirs("data/members", exist_ok=True)
     
-    # 파일명: 홍길동_2026년2월_Data.csv
-    now = datetime.now()
+    # 파일명: 홍길동_2026년2월_Data.csv (KST 기준)
+    now = get_kst_now()
     month_str = f"{now.year}년{now.month}월"
     safe_name = safe_filename(name)
     filename = f"data/members/{safe_name}_{month_str}_Data.csv"
@@ -110,10 +118,10 @@ def update_member_file(name: str, date_str: str, daily_steps: int, monthly_total
                 existing_data.append(row)
                 existing_dates.add(row["날짜"])
     
-    # 오늘 날짜가 이미 있으면 스킵 (중복 방지)
+    # 오늘 날짜가 이미 있으면 덮어쓰기
     if date_str in existing_dates:
-        print(f"  {name}: 오늘 데이터 이미 존재, 스킵")
-        return
+        print(f"  {name}: 오늘 데이터 업데이트")
+        existing_data = [row for row in existing_data if row["날짜"] != date_str]
     
     # 새 데이터 추가
     existing_data.append({
@@ -131,11 +139,36 @@ def update_member_file(name: str, date_str: str, daily_steps: int, monthly_total
     print(f"  {name}: 저장 완료")
 
 
+def save_daily_csv(members: List[Dict], date_str: str):
+    """일별 CSV 파일 저장"""
+    os.makedirs("data/daily", exist_ok=True)
+    
+    now = get_kst_now()
+    filename = f"data/daily/{now.strftime('%Y-%m-%d')}.csv"
+    crawl_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    
+    with open(filename, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시"])
+        
+        for m in members:
+            daily = m["daily_steps"] if m["daily_steps"] is not None else ""
+            writer.writerow([
+                m["rank"],
+                m["name"],
+                daily,
+                m["monthly_total"],
+                crawl_time
+            ])
+    
+    print(f"일별 CSV 저장: {filename}")
+
+
 def save_latest(members: List[Dict]):
     """최신 데이터 저장"""
     os.makedirs("data", exist_ok=True)
     
-    crawl_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    crawl_time = get_kst_now().strftime("%Y-%m-%d %H:%M:%S")
     
     with open("data/latest.csv", "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
@@ -189,7 +222,7 @@ def print_summary(members: List[Dict]):
     with_daily = [m for m in members if m["daily_steps"] is not None]
     sorted_daily = sorted(with_daily, key=lambda x: -x["daily_steps"])
     
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = get_kst_now().strftime("%Y-%m-%d")
     
     print("\n" + "=" * 55)
     print(f"📊 {today} 일별 걸음수 TOP 10")
@@ -210,9 +243,11 @@ def print_summary(members: List[Dict]):
 
 
 def main():
+    now = get_kst_now()
+    
     print("=" * 55)
     print("🚶 Pacer 만보걷기 일별 크롤러")
-    print(f"⏰ 실행 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"⏰ 실행 시간 (KST): {now.strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 55)
     
     # 1. 크롤링
@@ -227,8 +262,8 @@ def main():
     # 3. 일별 걸음수 계산
     daily_data = calculate_daily_steps(today_data, yesterday_data)
     
-    # 4. 개인별 파일 업데이트
-    today_str = datetime.now().strftime("%m/%d")
+    # 4. 개인별 파일 업데이트 (KST 기준)
+    today_str = now.strftime("%m/%d")
     print("\n개인별 파일 업데이트:")
     for m in daily_data:
         update_member_file(
@@ -238,10 +273,13 @@ def main():
             monthly_total=m["monthly_total"]
         )
     
-    # 5. latest.csv 저장
+    # 5. 일별 CSV 저장
+    save_daily_csv(daily_data, today_str)
+    
+    # 6. latest.csv 저장
     save_latest(daily_data)
     
-    # 6. 요약 출력
+    # 7. 요약 출력
     print_summary(daily_data)
 
 
