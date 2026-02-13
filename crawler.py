@@ -140,11 +140,14 @@ def update_member_file(name: str, date_str: str, daily_steps: int, monthly_total
 
 
 def save_daily_csv(members: List[Dict], date_str: str):
-    """일별 CSV 파일 저장"""
-    os.makedirs("data/daily", exist_ok=True)
-    
+    """일별 CSV 파일 저장 (연월별 폴더)"""
     now = get_kst_now()
-    filename = f"data/daily/{now.strftime('%Y-%m-%d')}.csv"
+    
+    # 폴더: data/daily/2026년2월/
+    month_folder = f"data/daily/{now.year}년{now.month}월"
+    os.makedirs(month_folder, exist_ok=True)
+    
+    filename = f"{month_folder}/{now.strftime('%Y-%m-%d')}.csv"
     crawl_time = now.strftime("%Y-%m-%d %H:%M:%S")
     
     with open(filename, "w", newline="", encoding="utf-8-sig") as f:
