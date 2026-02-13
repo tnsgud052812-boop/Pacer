@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>캔탑스 만보걷기 현황</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +21,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -39,6 +40,23 @@
             font-size: 0.95rem;
         }
 
+        .admin-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .admin-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
         .update-time {
             text-align: center;
             color: #667eea;
@@ -46,12 +64,39 @@
             font-size: 0.9rem;
         }
 
+        /* 탭 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        /* 카드 */
         .card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .card-title {
@@ -62,53 +107,177 @@
             gap: 10px;
         }
 
-        /* 통계 */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+        /* 그룹 순위 카드 */
+        .group-rank-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
             padding: 20px;
-            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .stat-value {
-            font-size: 1.8rem;
+        .group-rank-card:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+        }
+
+        .group-rank-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .rank-badge {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #f5af19, #f12711); }
+        .rank-2 { background: linear-gradient(135deg, #bdc3c7, #606060); }
+        .rank-3 { background: linear-gradient(135deg, #b8860b, #8b4513); }
+        .rank-default { background: rgba(255,255,255,0.1); }
+
+        .group-info {
+            flex: 1;
+        }
+
+        .group-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .group-stats {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .group-steps {
+            text-align: right;
+        }
+
+        .group-steps-value {
+            font-size: 1.4rem;
             font-weight: 700;
             color: #667eea;
         }
 
-        .stat-label {
+        .group-steps-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        /* 팀 리스트 */
+        .team-list {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: none;
+        }
+
+        .team-list.expanded {
+            display: block;
+        }
+
+        .team-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .team-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .team-rank {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: 12px;
+        }
+
+        .team-info {
+            flex: 1;
+        }
+
+        .team-name {
+            font-weight: 600;
+        }
+
+        .team-member-count {
             font-size: 0.8rem;
             color: #888;
-            margin-top: 5px;
         }
 
-        /* 검색 */
-        .search-box {
-            margin-bottom: 15px;
+        .team-steps {
+            color: #667eea;
+            font-weight: 600;
         }
 
-        .search-input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 1rem;
+        /* 멤버 리스트 */
+        .member-list {
+            margin-top: 10px;
+            padding-left: 42px;
+            display: none;
         }
 
-        .search-input::placeholder {
-            color: #666;
+        .member-list.expanded {
+            display: block;
         }
 
-        /* 테이블 */
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+        }
+
+        .member-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .member-rank-num {
+            width: 24px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .member-name {
+            flex: 1;
+        }
+
+        .member-daily {
+            color: #4ade80;
+            font-size: 0.85rem;
+            margin-right: 15px;
+        }
+
+        .member-total {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 전체 랭킹 테이블 */
         .table-container {
             overflow-x: auto;
         }
@@ -121,7 +290,7 @@
         th, td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         th {
@@ -130,46 +299,12 @@
             font-size: 0.85rem;
         }
 
+        tr {
+            cursor: pointer;
+        }
+
         tr:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .rank {
-            width: 50px;
-            text-align: center;
-        }
-
-        .rank-badge {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            line-height: 28px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-
-        .rank-1 { background: linear-gradient(135deg, #f5af19, #f12711); }
-        .rank-2 { background: linear-gradient(135deg, #bdc3c7, #606060); }
-        .rank-3 { background: linear-gradient(135deg, #b8860b, #8b4513); }
-        .rank-default { background: rgba(255, 255, 255, 0.1); }
-
-        .name {
-            font-weight: 600;
-        }
-
-        .steps {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .daily-steps {
-            color: #4ade80;
-        }
-
-        .daily-steps.negative {
-            color: #f87171;
+            background: rgba(255,255,255,0.05);
         }
 
         /* 개인 상세 모달 */
@@ -180,11 +315,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
         }
 
         .modal-overlay.active {
@@ -195,22 +331,26 @@
             background: #1a1a2e;
             border-radius: 20px;
             width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
+            max-width: 700px;
+            max-height: 90vh;
             overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .modal-header {
             padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            background: #1a1a2e;
+            z-index: 10;
         }
 
         .modal-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 600;
         }
 
@@ -218,7 +358,7 @@
             background: none;
             border: none;
             color: #888;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
         }
 
@@ -226,13 +366,129 @@
             padding: 20px;
         }
 
-        .history-table {
-            width: 100%;
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
-        .history-table th, .history-table td {
-            padding: 10px;
-            font-size: 0.9rem;
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .stat-sub {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* 그래프 */
+        .chart-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* 캘린더 */
+        .calendar {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-title {
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+            padding: 8px 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .calendar-day.empty {
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #667eea;
+        }
+
+        .calendar-day.has-data {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .calendar-day .day-num {
+            font-weight: 600;
+        }
+
+        .calendar-day .day-steps {
+            font-size: 0.6rem;
+            color: #888;
+            margin-top: 2px;
         }
 
         /* 로딩 */
@@ -245,7 +501,7 @@
         .spinner {
             width: 30px;
             height: 30px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255,255,255,0.1);
             border-top-color: #667eea;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -256,151 +512,161 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 탭 */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        /* 검색 */
+        .search-box {
+            margin-bottom: 15px;
         }
 
-        .tab {
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: transparent;
-            color: #888;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
             color: #fff;
-            border-color: transparent;
+            font-size: 1rem;
+        }
+
+        .search-input::placeholder {
+            color: #666;
         }
 
         @media (max-width: 600px) {
-            .stats {
-                grid-template-columns: 1fr;
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
             
-            .stat-value {
-                font-size: 1.5rem;
+            .group-rank-header {
+                flex-wrap: wrap;
             }
             
-            th, td {
-                padding: 8px;
-                font-size: 0.85rem;
+            .group-steps {
+                width: 100%;
+                text-align: left;
+                margin-top: 10px;
             }
         }
     </style>
 </head>
 <body>
+    <a href="admin.html" class="admin-link">⚙️ 관리자</a>
+    
     <div class="container">
         <div class="header">
             <h1>🚶 캔탑스 만보걷기</h1>
-            <p class="subtitle">일별 걸음수 현황</p>
+            <p class="subtitle">그룹별 경쟁 현황</p>
         </div>
 
-        <div class="update-time" id="updateTime">
-            데이터 로딩 중...
+        <div class="update-time" id="updateTime">데이터 로딩 중...</div>
+
+        <!-- 탭 -->
+        <div class="tabs">
+            <button class="tab active" data-tab="groups" onclick="switchTab('groups')">🏆 그룹 순위</button>
+            <button class="tab" data-tab="all" onclick="switchTab('all')">👥 전체 랭킹</button>
         </div>
 
-        <!-- 통계 -->
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value" id="totalMembers">-</div>
-                <div class="stat-label">참여 인원</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="totalSteps">-</div>
-                <div class="stat-label">오늘 총 걸음수</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="avgSteps">-</div>
-                <div class="stat-label">평균 걸음수</div>
-            </div>
-        </div>
-
-        <!-- 랭킹 테이블 -->
-        <div class="card">
-            <div class="card-title">📊 오늘의 랭킹</div>
-            
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" 
-                       placeholder="이름 검색..." oninput="filterTable()">
-            </div>
-
-            <div class="table-container">
-                <div class="loading" id="loading">
+        <!-- 그룹 순위 탭 -->
+        <div class="tab-content" id="groupsTab">
+            <div id="groupRankings">
+                <div class="loading">
                     <div class="spinner"></div>
                     <div>데이터 불러오는 중...</div>
                 </div>
-                <table id="rankTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th class="rank">순위</th>
-                            <th>이름</th>
-                            <th>오늘 걸음수</th>
-                            <th>월 누적</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                    </tbody>
-                </table>
+            </div>
+        </div>
+
+        <!-- 전체 랭킹 탭 -->
+        <div class="tab-content" id="allTab" style="display:none;">
+            <div class="card">
+                <div class="card-title">👥 전체 랭킹</div>
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" 
+                           placeholder="이름 검색..." oninput="filterAllRanking()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>이름</th>
+                                <th>소속</th>
+                                <th>오늘</th>
+                                <th>월 누적</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allRankingBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 개인 상세 모달 -->
-    <div class="modal-overlay" id="modal">
+    <div class="modal-overlay" id="memberModal" onclick="if(event.target===this)closeModal()">
         <div class="modal">
             <div class="modal-header">
                 <span class="modal-title" id="modalTitle">개인 기록</span>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body" id="modalBody">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>로딩 중...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let allData = [];
-        
-        // GitHub Raw URL (저장소에 맞게 수정)
+        // GitHub 설정
         const REPO_OWNER = 'tnsgud052812-boop';
         const REPO_NAME = 'Pacer';
         const BRANCH = 'main';
-        
-        const LATEST_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv`;
-        
-        // 페이지 로드 시 데이터 가져오기
-        document.addEventListener('DOMContentLoaded', loadData);
-        
-        async function loadData() {
+
+        // 데이터
+        let config = { groups: [] };
+        let latestData = [];
+        let memberDataCache = {};
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', loadAllData);
+
+        async function loadAllData() {
+            await Promise.all([loadConfig(), loadLatestData()]);
+            renderGroupRankings();
+            renderAllRanking();
+        }
+
+        // 설정 로드
+        async function loadConfig() {
             try {
-                const response = await fetch(LATEST_URL);
-                
-                if (!response.ok) {
-                    throw new Error('데이터를 불러올 수 없습니다');
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/config.json?t=${Date.now()}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    config = await res.json();
                 }
-                
-                const csvText = await response.text();
-                allData = parseCSV(csvText);
-                
-                displayData(allData);
-                
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').innerHTML = `
-                    <div style="color: #f87171;">
-                        ⚠️ 데이터를 불러올 수 없습니다.<br>
-                        <small style="color: #888;">저장소가 Private이거나 아직 데이터가 없습니다.</small>
-                    </div>
-                `;
+            } catch (e) {
+                console.error('설정 로드 실패:', e);
             }
         }
-        
+
+        // 최신 데이터 로드
+        async function loadLatestData() {
+            try {
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv?t=${Date.now()}`;
+                const res = await fetch(url);
+                const csv = await res.text();
+                latestData = parseCSV(csv);
+                
+                if (latestData.length > 0 && latestData[0]['크롤링일시']) {
+                    document.getElementById('updateTime').textContent = 
+                        `마지막 업데이트: ${latestData[0]['크롤링일시']}`;
+                }
+            } catch (e) {
+                console.error('데이터 로드 실패:', e);
+            }
+        }
+
         function parseCSV(csv) {
             const lines = csv.trim().split('\n');
             const headers = lines[0].split(',');
@@ -409,159 +675,374 @@
             for (let i = 1; i < lines.length; i++) {
                 const values = lines[i].split(',');
                 const row = {};
-                
-                headers.forEach((header, index) => {
-                    row[header.trim()] = values[index]?.trim() || '';
+                headers.forEach((h, idx) => {
+                    row[h.trim()] = values[idx]?.trim() || '';
                 });
-                
                 data.push(row);
             }
-            
             return data;
         }
-        
-        function displayData(data) {
-            // 로딩 숨기기
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('rankTable').style.display = 'table';
+
+        // 탭 전환
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
             
-            // 업데이트 시간
-            if (data.length > 0 && data[0]['크롤링일시']) {
-                document.getElementById('updateTime').textContent = 
-                    `마지막 업데이트: ${data[0]['크롤링일시']}`;
-            }
-            
-            // 통계 계산
-            const validData = data.filter(d => d['오늘걸음수'] && d['오늘걸음수'] !== 'N/A' && d['오늘걸음수'] !== '');
-            const totalSteps = validData.reduce((sum, d) => sum + parseInt(d['오늘걸음수'] || 0), 0);
-            const avgSteps = validData.length > 0 ? Math.floor(totalSteps / validData.length) : 0;
-            
-            document.getElementById('totalMembers').textContent = data.length;
-            document.getElementById('totalSteps').textContent = formatNumber(totalSteps);
-            document.getElementById('avgSteps').textContent = formatNumber(avgSteps);
-            
-            // 테이블 렌더링
-            renderTable(data);
+            document.getElementById('groupsTab').style.display = tab === 'groups' ? 'block' : 'none';
+            document.getElementById('allTab').style.display = tab === 'all' ? 'block' : 'none';
         }
-        
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+
+        // 멤버 데이터 가져오기
+        function getMemberData(name) {
+            return latestData.find(d => d['이름'] === name) || {};
+        }
+
+        // 그룹 순위 렌더링
+        function renderGroupRankings() {
+            const container = document.getElementById('groupRankings');
             
-            data.forEach(row => {
-                const rank = parseInt(row['순위']) || 0;
-                const dailySteps = row['오늘걸음수'];
-                const monthlyTotal = parseInt(row['월누적']) || 0;
-                
+            if (config.groups.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <div style="text-align:center;padding:40px;color:#888;">
+                            아직 그룹이 설정되지 않았습니다.<br>
+                            <a href="admin.html" style="color:#667eea;">관리자 페이지</a>에서 그룹을 추가하세요.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 그룹별 총 걸음수 계산
+            const groupStats = config.groups.map(group => {
+                let totalSteps = 0;
+                let totalDaily = 0;
+                let memberCount = 0;
+
+                (group.teams || []).forEach(team => {
+                    (team.members || []).forEach(name => {
+                        const data = getMemberData(name);
+                        totalSteps += parseInt(data['월누적']) || 0;
+                        totalDaily += parseInt(data['오늘걸음수']) || 0;
+                        memberCount++;
+                    });
+                });
+
+                return {
+                    ...group,
+                    totalSteps,
+                    totalDaily,
+                    memberCount
+                };
+            }).sort((a, b) => b.totalSteps - a.totalSteps);
+
+            container.innerHTML = groupStats.map((group, idx) => {
+                const rank = idx + 1;
                 let rankClass = 'rank-default';
                 if (rank === 1) rankClass = 'rank-1';
                 else if (rank === 2) rankClass = 'rank-2';
                 else if (rank === 3) rankClass = 'rank-3';
-                
-                const dailyDisplay = dailySteps && dailySteps !== 'N/A' && dailySteps !== '' 
-                    ? formatNumber(parseInt(dailySteps)) 
-                    : '-';
-                
-                const tr = document.createElement('tr');
-                tr.style.cursor = 'pointer';
-                tr.onclick = () => showMemberDetail(row['이름']);
-                tr.innerHTML = `
-                    <td class="rank"><span class="rank-badge ${rankClass}">${rank}</span></td>
-                    <td class="name">${row['이름']}</td>
-                    <td class="daily-steps">${dailyDisplay}</td>
-                    <td class="steps">${formatNumber(monthlyTotal)}</td>
+
+                // 팀 순위 계산
+                const teamStats = (group.teams || []).map(team => {
+                    let teamSteps = 0;
+                    let teamDaily = 0;
+                    (team.members || []).forEach(name => {
+                        const data = getMemberData(name);
+                        teamSteps += parseInt(data['월누적']) || 0;
+                        teamDaily += parseInt(data['오늘걸음수']) || 0;
+                    });
+                    return { ...team, totalSteps: teamSteps, totalDaily: teamDaily };
+                }).sort((a, b) => b.totalSteps - a.totalSteps);
+
+                return `
+                    <div class="group-rank-card" onclick="toggleGroup('${group.id}')">
+                        <div class="group-rank-header">
+                            <div class="rank-badge ${rankClass}">${rank}</div>
+                            <div class="group-info">
+                                <div class="group-name">${group.name}</div>
+                                <div class="group-stats">${teamStats.length}팀 · ${group.memberCount}명</div>
+                            </div>
+                            <div class="group-steps">
+                                <div class="group-steps-value">${formatNumber(group.totalSteps)}</div>
+                                <div class="group-steps-label">총 걸음수</div>
+                            </div>
+                        </div>
+                        <div class="team-list" id="teams-${group.id}">
+                            ${teamStats.map((team, tIdx) => {
+                                const tRank = tIdx + 1;
+                                let tRankClass = 'rank-default';
+                                if (tRank === 1) tRankClass = 'rank-1';
+                                else if (tRank === 2) tRankClass = 'rank-2';
+                                else if (tRank === 3) tRankClass = 'rank-3';
+
+                                // 멤버 순위
+                                const memberStats = (team.members || []).map(name => {
+                                    const data = getMemberData(name);
+                                    return {
+                                        name,
+                                        daily: parseInt(data['오늘걸음수']) || 0,
+                                        total: parseInt(data['월누적']) || 0
+                                    };
+                                }).sort((a, b) => b.total - a.total);
+
+                                return `
+                                    <div class="team-item" onclick="event.stopPropagation();toggleTeam('${group.id}-${team.id}')">
+                                        <div class="team-rank ${tRankClass}">${tRank}</div>
+                                        <div class="team-info">
+                                            <div class="team-name">${team.name}</div>
+                                            <div class="team-member-count">${team.members?.length || 0}명</div>
+                                        </div>
+                                        <div class="team-steps">${formatNumber(team.totalSteps)}</div>
+                                    </div>
+                                    <div class="member-list" id="members-${group.id}-${team.id}">
+                                        ${memberStats.map((m, mIdx) => `
+                                            <div class="member-item" onclick="event.stopPropagation();showMemberDetail('${m.name}')">
+                                                <div class="member-rank-num">${mIdx + 1}</div>
+                                                <div class="member-name">${m.name}</div>
+                                                <div class="member-daily">+${formatNumber(m.daily)}</div>
+                                                <div class="member-total">${formatNumber(m.total)}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
                 `;
-                
-                tbody.appendChild(tr);
+            }).join('');
+        }
+
+        // 그룹 토글
+        function toggleGroup(groupId) {
+            const el = document.getElementById(`teams-${groupId}`);
+            el.classList.toggle('expanded');
+        }
+
+        // 팀 토글
+        function toggleTeam(teamId) {
+            const el = document.getElementById(`members-${teamId}`);
+            el.classList.toggle('expanded');
+        }
+
+        // 전체 랭킹 렌더링
+        function renderAllRanking(filter = '') {
+            const tbody = document.getElementById('allRankingBody');
+            
+            // 멤버별 소속 정보 매핑
+            const memberTeamMap = {};
+            config.groups.forEach(g => {
+                (g.teams || []).forEach(t => {
+                    (t.members || []).forEach(m => {
+                        memberTeamMap[m] = `${g.name} > ${t.name}`;
+                    });
+                });
             });
+
+            const filtered = filter 
+                ? latestData.filter(d => d['이름'].toLowerCase().includes(filter.toLowerCase()))
+                : latestData;
+
+            tbody.innerHTML = filtered.map(row => {
+                const rank = parseInt(row['순위']) || 0;
+                let rankClass = 'rank-default';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+
+                const daily = row['오늘걸음수'] && row['오늘걸음수'] !== '' 
+                    ? formatNumber(parseInt(row['오늘걸음수'])) 
+                    : '-';
+                const total = formatNumber(parseInt(row['월누적']) || 0);
+                const team = memberTeamMap[row['이름']] || '-';
+
+                return `
+                    <tr onclick="showMemberDetail('${row['이름']}')">
+                        <td><span class="rank-badge ${rankClass}" style="width:28px;height:28px;font-size:0.8rem;">${rank}</span></td>
+                        <td>${row['이름']}</td>
+                        <td style="color:#888;font-size:0.85rem;">${team}</td>
+                        <td style="color:#4ade80;">+${daily}</td>
+                        <td style="color:#667eea;font-weight:600;">${total}</td>
+                    </tr>
+                `;
+            }).join('');
         }
-        
-        function filterTable() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allData.filter(d => 
-                d['이름'].toLowerCase().includes(query)
-            );
-            renderTable(filtered);
+
+        function filterAllRanking() {
+            const query = document.getElementById('searchInput').value;
+            renderAllRanking(query);
         }
-        
+
+        // 개인 상세 모달
         async function showMemberDetail(name) {
-            const modal = document.getElementById('modal');
+            const modal = document.getElementById('memberModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
-            
-            modalTitle.textContent = `📊 ${name} 기록`;
+
+            modalTitle.textContent = `📊 ${name}`;
             modalBody.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
             modal.classList.add('active');
+
+            // 현재 데이터
+            const currentData = getMemberData(name);
             
-            // 개인 파일 URL 생성
+            // 개인 히스토리 로드
             const now = new Date();
             const monthStr = `${now.getFullYear()}년${now.getMonth() + 1}월`;
             const fileName = encodeURIComponent(`${name}_${monthStr}_Data.csv`);
-            const memberURL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}`;
-            
+            const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
+
+            let history = [];
             try {
-                const response = await fetch(memberURL);
-                
-                if (!response.ok) {
-                    throw new Error('개인 데이터 없음');
+                const res = await fetch(url);
+                if (res.ok) {
+                    const csv = await res.text();
+                    history = parseCSV(csv);
                 }
-                
-                const csvText = await response.text();
-                const memberData = parseCSV(csvText);
-                
-                let tableHTML = `
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>날짜</th>
-                                <th>오늘 걸음수</th>
-                                <th>월 누적</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                memberData.forEach(row => {
-                    const daily = row['오늘걸음수'] && row['오늘걸음수'] !== 'N/A' 
-                        ? formatNumber(parseInt(row['오늘걸음수'])) 
-                        : '-';
-                    const total = formatNumber(parseInt(row['월누적']) || 0);
-                    
-                    tableHTML += `
-                        <tr>
-                            <td>${row['날짜']}</td>
-                            <td class="daily-steps">${daily}</td>
-                            <td class="steps">${total}</td>
-                        </tr>
-                    `;
-                });
-                
-                tableHTML += '</tbody></table>';
-                modalBody.innerHTML = tableHTML;
-                
-            } catch (error) {
-                modalBody.innerHTML = `
-                    <div style="text-align: center; color: #888; padding: 20px;">
-                        아직 개인 기록이 없습니다.
+            } catch (e) {}
+
+            // 통계 계산
+            const dailySteps = history.map(h => parseInt(h['오늘걸음수']) || 0).filter(v => v > 0);
+            const totalDays = dailySteps.length;
+            const avgSteps = totalDays > 0 ? Math.floor(dailySteps.reduce((a,b) => a+b, 0) / totalDays) : 0;
+            const maxSteps = dailySteps.length > 0 ? Math.max(...dailySteps) : 0;
+            const minSteps = dailySteps.length > 0 ? Math.min(...dailySteps) : 0;
+            const maxDay = history.find(h => parseInt(h['오늘걸음수']) === maxSteps)?.['날짜'] || '-';
+            const minDay = history.find(h => parseInt(h['오늘걸음수']) === minSteps)?.['날짜'] || '-';
+
+            // HTML 렌더링
+            modalBody.innerHTML = `
+                <!-- 통계 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${formatNumber(parseInt(currentData['월누적']) || 0)}</div>
+                        <div class="stat-label">월 누적</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${formatNumber(avgSteps)}</div>
+                        <div class="stat-label">일 평균</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${formatNumber(maxSteps)}</div>
+                        <div class="stat-label">최대 걸음수</div>
+                        <div class="stat-sub">${maxDay}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${formatNumber(minSteps)}</div>
+                        <div class="stat-label">최소 걸음수</div>
+                        <div class="stat-sub">${minDay}</div>
+                    </div>
+                </div>
+
+                <!-- 그래프 -->
+                <div class="chart-container">
+                    <canvas id="stepsChart"></canvas>
+                </div>
+
+                <!-- 캘린더 -->
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <span class="calendar-title">📅 ${now.getFullYear()}년 ${now.getMonth() + 1}월</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            `;
+
+            // 그래프 그리기
+            renderChart(history);
+
+            // 캘린더 그리기
+            renderCalendar(now.getFullYear(), now.getMonth(), history);
+        }
+
+        // 그래프
+        function renderChart(history) {
+            const ctx = document.getElementById('stepsChart').getContext('2d');
+            
+            const labels = history.map(h => h['날짜']);
+            const data = history.map(h => parseInt(h['오늘걸음수']) || 0);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '일별 걸음수',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 캘린더
+        function renderCalendar(year, month, history) {
+            const grid = document.getElementById('calendarGrid');
+            const today = new Date();
+            
+            // 히스토리 날짜 맵
+            const historyMap = {};
+            history.forEach(h => {
+                historyMap[h['날짜']] = parseInt(h['오늘걸음수']) || 0;
+            });
+
+            // 요일 헤더
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+            // 첫째 날과 마지막 날
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+
+            // 빈 칸
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="calendar-day empty"></div>';
+            }
+
+            // 날짜
+            for (let date = 1; date <= lastDate; date++) {
+                const dateStr = `${String(month + 1).padStart(2, '0')}/${String(date).padStart(2, '0')}`;
+                const steps = historyMap[dateStr];
+                const isToday = year === today.getFullYear() && month === today.getMonth() && date === today.getDate();
+                const hasData = steps !== undefined;
+
+                html += `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${hasData ? 'has-data' : ''}">
+                        <div class="day-num">${date}</div>
+                        ${hasData ? `<div class="day-steps">${(steps/1000).toFixed(0)}k</div>` : ''}
                     </div>
                 `;
             }
+
+            grid.innerHTML = html;
         }
-        
+
         function closeModal() {
-            document.getElementById('modal').classList.remove('active');
+            document.getElementById('memberModal').classList.remove('active');
         }
-        
+
         function formatNumber(n) {
             return n.toLocaleString('ko-KR');
         }
-        
-        // 모달 외부 클릭 시 닫기
-        document.getElementById('modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
     </script>
 </body>
 </html>
