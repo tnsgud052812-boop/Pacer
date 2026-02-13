@@ -1,7 +1,7 @@
 """
-Pacer 만보걷기 크롤러 (일별 버전)
-매일 23:58 KST에 자동 실행
-전날 대비 걸음수 변화 계산
+Pacer 만보걷기 크롤러
+매일 23:59 KST에 자동 실행
+개인별 월간 파일로 저장
 """
 
 import requests
@@ -63,23 +63,95 @@ def crawl_pacer_data() -> List[Dict]:
     return all_members
 
 
-def load_yesterday_data() -> Dict[str, int]:
-    """어제 데이터 로드"""
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    filename = f"data/daily/{yesterday}.csv"
-    
-    if not os.path.exists(filename):
-        print(f"어제 데이터 없음: {filename}")
+def load_yesterday_total() -> Dict[str, int]:
+    """어제 월누적 데이터 로드 (latest.csv에서)"""
+    if not os.path.exists("data/latest.csv"):
         return {}
     
     data = {}
-    with open(filename, "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            data[row["이름"]] = int(row["월간누적"])
+    try:
+        with open("data/latest.csv", "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                data[row["이름"]] = int(row["월누적"])
+    except Exception as e:
+        print(f"어제 데이터 로드 실패: {e}")
+        return {}
     
-    print(f"어제 데이터 로드: {len(data)}명")
     return data
+
+
+def safe_filename(name: str) -> str:
+    """파일명에 사용할 수 없는 문자 제거"""
+    invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+    for char in invalid_chars:
+        name = name.replace(char, '_')
+    return name
+
+
+def update_member_file(name: str, date_str: str, daily_steps: int, monthly_total: int):
+    """개인별 월간 파일 업데이트"""
+    os.makedirs("data/members", exist_ok=True)
+    
+    # 파일명: 홍길동_2026년2월_Data.csv
+    now = datetime.now()
+    month_str = f"{now.year}년{now.month}월"
+    safe_name = safe_filename(name)
+    filename = f"data/members/{safe_name}_{month_str}_Data.csv"
+    
+    # 기존 데이터 로드
+    existing_data = []
+    existing_dates = set()
+    
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                existing_data.append(row)
+                existing_dates.add(row["날짜"])
+    
+    # 오늘 날짜가 이미 있으면 스킵 (중복 방지)
+    if date_str in existing_dates:
+        print(f"  {name}: 오늘 데이터 이미 존재, 스킵")
+        return
+    
+    # 새 데이터 추가
+    existing_data.append({
+        "날짜": date_str,
+        "오늘걸음수": daily_steps if daily_steps is not None else "N/A",
+        "월누적": monthly_total
+    })
+    
+    # 파일 저장
+    with open(filename, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=["날짜", "오늘걸음수", "월누적"])
+        writer.writeheader()
+        writer.writerows(existing_data)
+    
+    print(f"  {name}: 저장 완료")
+
+
+def save_latest(members: List[Dict]):
+    """최신 데이터 저장"""
+    os.makedirs("data", exist_ok=True)
+    
+    crawl_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    with open("data/latest.csv", "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        writer.writerow(["순위", "이름", "오늘걸음수", "월누적", "크롤링일시"])
+        
+        for m in members:
+            daily = m["daily_steps"] if m["daily_steps"] is not None else ""
+            writer.writerow([
+                m["rank"],
+                m["name"],
+                daily,
+                m["monthly_total"],
+                crawl_time
+            ])
+    
+    print("latest.csv 저장 완료")
 
 
 def calculate_daily_steps(today_data: List[Dict], yesterday_data: Dict[str, int]) -> List[Dict]:
@@ -93,10 +165,11 @@ def calculate_daily_steps(today_data: List[Dict], yesterday_data: Dict[str, int]
         
         # 일별 걸음수 계산
         if yesterday_total == 0:
-            # 어제 데이터 없음 (신규 또는 첫 집계)
-            daily_steps = None
+            # 어제 데이터 없음 (신규 또는 월초)
+            # 월누적이 곧 오늘 걸음수일 가능성 높음
+            daily_steps = today_total
         elif today_total < yesterday_total:
-            # 월초 리셋됨 - 오늘 누적이 곧 오늘 걸음수
+            # 월초 리셋됨
             daily_steps = today_total
         else:
             daily_steps = today_total - yesterday_total
@@ -111,58 +184,8 @@ def calculate_daily_steps(today_data: List[Dict], yesterday_data: Dict[str, int]
     return result
 
 
-def save_daily_data(members: List[Dict]) -> str:
-    """일별 데이터 저장"""
-    os.makedirs("data/daily", exist_ok=True)
-    
-    today = datetime.now().strftime("%Y-%m-%d")
-    filename = f"data/daily/{today}.csv"
-    crawl_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    with open(filename, "w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.writer(f)
-        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시"])
-        
-        for m in members:
-            daily = m["daily_steps"] if m["daily_steps"] is not None else ""
-            writer.writerow([
-                m["rank"],
-                m["name"],
-                daily,
-                m["monthly_total"],
-                crawl_time
-            ])
-    
-    print(f"저장 완료: {filename}")
-    return filename
-
-
-def save_latest(members: List[Dict]) -> str:
-    """최신 데이터 저장"""
-    os.makedirs("data", exist_ok=True)
-    
-    crawl_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    with open("data/latest.csv", "w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.writer(f)
-        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시"])
-        
-        for m in members:
-            daily = m["daily_steps"] if m["daily_steps"] is not None else ""
-            writer.writerow([
-                m["rank"],
-                m["name"],
-                daily,
-                m["monthly_total"],
-                crawl_time
-            ])
-    
-    return "data/latest.csv"
-
-
 def print_summary(members: List[Dict]):
     """결과 요약 출력"""
-    # 오늘 걸음수 기준 정렬
     with_daily = [m for m in members if m["daily_steps"] is not None]
     sorted_daily = sorted(with_daily, key=lambda x: -x["daily_steps"])
     
@@ -177,7 +200,6 @@ def print_summary(members: List[Dict]):
     
     print("=" * 55)
     
-    # 통계
     if with_daily:
         total = sum(m["daily_steps"] for m in with_daily)
         avg = total // len(with_daily)
@@ -200,16 +222,26 @@ def main():
         return
     
     # 2. 어제 데이터 로드
-    yesterday_data = load_yesterday_data()
+    yesterday_data = load_yesterday_total()
     
     # 3. 일별 걸음수 계산
     daily_data = calculate_daily_steps(today_data, yesterday_data)
     
-    # 4. 저장
-    save_daily_data(daily_data)
+    # 4. 개인별 파일 업데이트
+    today_str = datetime.now().strftime("%m/%d")
+    print("\n개인별 파일 업데이트:")
+    for m in daily_data:
+        update_member_file(
+            name=m["name"],
+            date_str=today_str,
+            daily_steps=m["daily_steps"],
+            monthly_total=m["monthly_total"]
+        )
+    
+    # 5. latest.csv 저장
     save_latest(daily_data)
     
-    # 5. 요약 출력
+    # 6. 요약 출력
     print_summary(daily_data)
 
 
