@@ -24,6 +24,40 @@ def get_kst_now():
     return datetime.now(KST)
 
 
+def migrate_old_daily_files():
+    """기존 daily 파일들을 연월별 폴더로 이동"""
+    daily_dir = "data/daily"
+    if not os.path.exists(daily_dir):
+        return
+    
+    moved_count = 0
+    for filename in os.listdir(daily_dir):
+        # 2026-02-01.csv 형식인 파일만 처리
+        if filename.endswith('.csv') and len(filename) == 14:
+            try:
+                # 파일명에서 날짜 추출
+                date_str = filename.replace('.csv', '')
+                file_date = datetime.strptime(date_str, '%Y-%m-%d')
+                
+                # 연월 폴더 생성
+                month_folder = f"{daily_dir}/{file_date.year}년{file_date.month}월"
+                os.makedirs(month_folder, exist_ok=True)
+                
+                # 파일 이동
+                old_path = f"{daily_dir}/{filename}"
+                new_path = f"{month_folder}/{filename}"
+                
+                if not os.path.exists(new_path):
+                    os.rename(old_path, new_path)
+                    moved_count += 1
+                    print(f"  이동: {filename} → {month_folder}/")
+            except:
+                continue
+    
+    if moved_count > 0:
+        print(f"📁 기존 파일 {moved_count}개 정리 완료")
+
+
 def crawl_pacer_data() -> List[Dict]:
     """Pacer API에서 전체 멤버 데이터 크롤링"""
     all_members = []
@@ -252,6 +286,9 @@ def main():
     print("🚶 Pacer 만보걷기 일별 크롤러")
     print(f"⏰ 실행 시간 (KST): {now.strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 55)
+    
+    # 0. 기존 파일 정리 (최초 1회만 실행됨)
+    migrate_old_daily_files()
     
     # 1. 크롤링
     today_data = crawl_pacer_data()
