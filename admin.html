@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 캔탑스 만보걷기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        /* 로그인 화면 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-box h1 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .login-box .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .login-input::placeholder {
+            color: #666;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-error {
+            color: #f87171;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* 메인 레이아웃 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .header-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        .btn-danger {
+            border-color: rgba(248, 113, 113, 0.5);
+            color: #f87171;
+        }
+
+        /* 탭 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        /* 카드 */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* 그룹/팀 리스트 */
+        .group-item, .team-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .group-item:hover, .team-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .item-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .item-btn-edit {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .item-btn-delete {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .teams-container {
+            margin-left: 20px;
+            padding-left: 15px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .member-tag {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+        }
+
+        /* 멤버 선택 */
+        .member-select-list {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .member-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .member-checkbox:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .member-checkbox input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 관리자 리스트 */
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .admin-id {
+            font-weight: 600;
+        }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #f87171;
+        }
+
+        /* 저장 버튼 고정 */
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .save-bar .btn {
+            min-width: 150px;
+        }
+
+        .content-wrapper {
+            padding-bottom: 80px;
+        }
+
+        /* 검색 */
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1>🔐 관리자 로그인</h1>
+            <p class="subtitle">캔탑스 만보걷기 관리</p>
+            <input type="text" class="login-input" id="loginId" placeholder="아이디">
+            <input type="password" class="login-input" id="loginPw" placeholder="비밀번호" onkeypress="if(event.key==='Enter')doLogin()">
+            <button class="login-btn" onclick="doLogin()">로그인</button>
+            <div class="login-error" id="loginError">아이디 또는 비밀번호가 틀렸습니다.</div>
+        </div>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="container content-wrapper" id="mainContent" style="display:none;">
+        <div class="header">
+            <h1>⚙️ 관리자 페이지</h1>
+            <div class="header-btns">
+                <button class="btn" onclick="location.href='index.html'">📊 메인으로</button>
+                <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
+            </div>
+        </div>
+
+        <!-- 탭 -->
+        <div class="tabs">
+            <button class="tab active" data-tab="groups" onclick="switchTab('groups')">🏆 그룹/팀 관리</button>
+            <button class="tab" data-tab="admins" onclick="switchTab('admins')">👤 관리자 계정</button>
+        </div>
+
+        <!-- 그룹/팀 관리 탭 -->
+        <div class="tab-content" id="groupsTab">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📋 그룹 목록</span>
+                    <button class="btn btn-primary" onclick="showAddGroupModal()">+ 그룹 추가</button>
+                </div>
+                <div id="groupsList"></div>
+            </div>
+        </div>
+
+        <!-- 관리자 계정 탭 -->
+        <div class="tab-content" id="adminsTab" style="display:none;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">👤 관리자 계정</span>
+                    <button class="btn btn-primary" onclick="showAddAdminModal()">+ 계정 추가</button>
+                </div>
+                <div id="adminsList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔑 내 비밀번호 변경</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">현재 비밀번호</label>
+                    <input type="password" class="form-input" id="currentPw">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">새 비밀번호</label>
+                    <input type="password" class="form-input" id="newPw">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">새 비밀번호 확인</label>
+                    <input type="password" class="form-input" id="newPwConfirm">
+                </div>
+                <button class="btn btn-primary" onclick="changeMyPassword()">비밀번호 변경</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 저장 바 -->
+    <div class="save-bar" id="saveBar" style="display:none;">
+        <button class="btn" onclick="loadConfig()">변경 취소</button>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 GitHub에 저장</button>
+    </div>
+
+    <!-- 그룹 추가/수정 모달 -->
+    <div class="modal-overlay" id="groupModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="groupModalTitle">그룹 추가</span>
+                <button class="modal-close" onclick="closeModal('groupModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">그룹 이름</label>
+                    <input type="text" class="form-input" id="groupName" placeholder="예: 그룹 A">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('groupModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveGroup()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 팀 추가/수정 모달 -->
+    <div class="modal-overlay" id="teamModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="teamModalTitle">팀 추가</span>
+                <button class="modal-close" onclick="closeModal('teamModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">팀 이름</label>
+                    <input type="text" class="form-input" id="teamName" placeholder="예: 기술표준팀">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">팀원 선택</label>
+                    <div class="search-box">
+                        <input type="text" class="search-input" id="memberSearch" placeholder="이름 검색..." oninput="filterMembers()">
+                    </div>
+                    <div class="member-select-list" id="memberSelectList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('teamModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveTeam()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 관리자 추가 모달 -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">관리자 추가</span>
+                <button class="modal-close" onclick="closeModal('adminModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">아이디</label>
+                    <input type="text" class="form-input" id="newAdminId" placeholder="아이디 입력">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">비밀번호</label>
+                    <input type="password" class="form-input" id="newAdminPw" placeholder="비밀번호 입력">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('adminModal')">취소</button>
+                <button class="btn btn-primary" onclick="addAdmin()">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // GitHub 설정
+        const REPO_OWNER = 'tnsgud052812-boop';
+        const REPO_NAME = 'Pacer';
+        const BRANCH = 'main';
+        const CONFIG_PATH = 'data/config.json';
+
+        // 상태
+        let config = { admins: [], groups: [] };
+        let allMembers = [];
+        let currentUser = null;
+        let editingGroupId = null;
+        let editingTeamId = null;
+        let editingGroupIdForTeam = null;
+        let hasChanges = false;
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllMembers();
+            await loadConfig();
+            checkLogin();
+        });
+
+        // 전체 멤버 로드 (latest.csv에서)
+        async function loadAllMembers() {
+            try {
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv`;
+                const response = await fetch(url);
+                const csv = await response.text();
+                const lines = csv.trim().split('\n');
+                
+                allMembers = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols[1]) {
+                        allMembers.push(cols[1].trim());
+                    }
+                }
+                console.log('멤버 로드:', allMembers.length);
+            } catch (e) {
+                console.error('멤버 로드 실패:', e);
+            }
+        }
+
+        // 설정 로드
+        async function loadConfig() {
+            try {
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${CONFIG_PATH}?t=${Date.now()}`;
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    config = await response.json();
+                } else {
+                    // 기본 설정
+                    config = {
+                        admins: [{ id: 'admin', password: 'admin' }],
+                        groups: []
+                    };
+                }
+                
+                hasChanges = false;
+                document.getElementById('saveBar').style.display = 'none';
+                renderGroups();
+                renderAdmins();
+            } catch (e) {
+                console.error('설정 로드 실패:', e);
+                config = {
+                    admins: [{ id: 'admin', password: 'admin' }],
+                    groups: []
+                };
+            }
+        }
+
+        // 로그인 체크
+        function checkLogin() {
+            const saved = sessionStorage.getItem('adminUser');
+            if (saved) {
+                currentUser = saved;
+                showMain();
+            }
+        }
+
+        // 로그인
+        function doLogin() {
+            const id = document.getElementById('loginId').value;
+            const pw = document.getElementById('loginPw').value;
+            
+            const admin = config.admins.find(a => a.id === id && a.password === pw);
+            
+            if (admin) {
+                currentUser = id;
+                sessionStorage.setItem('adminUser', id);
+                showMain();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        // 로그아웃
+        function doLogout() {
+            sessionStorage.removeItem('adminUser');
+            location.reload();
+        }
+
+        // 메인 표시
+        function showMain() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        // 탭 전환
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            document.getElementById('groupsTab').style.display = tab === 'groups' ? 'block' : 'none';
+            document.getElementById('adminsTab').style.display = tab === 'admins' ? 'block' : 'none';
+        }
+
+        // 그룹 렌더링
+        function renderGroups() {
+            const container = document.getElementById('groupsList');
+            
+            if (config.groups.length === 0) {
+                container.innerHTML = '<div class="empty-state">그룹이 없습니다. 그룹을 추가해주세요.</div>';
+                return;
+            }
+            
+            container.innerHTML = config.groups.map(group => `
+                <div class="group-item">
+                    <div class="item-header">
+                        <span class="item-name">🏆 ${group.name}</span>
+                        <div class="item-actions">
+                            <button class="item-btn item-btn-edit" onclick="showAddTeamModal('${group.id}')">+ 팀 추가</button>
+                            <button class="item-btn item-btn-edit" onclick="showEditGroupModal('${group.id}')">수정</button>
+                            <button class="item-btn item-btn-delete" onclick="deleteGroup('${group.id}')">삭제</button>
+                        </div>
+                    </div>
+                    <div class="teams-container">
+                        ${(group.teams || []).map(team => `
+                            <div class="team-item">
+                                <div class="item-header">
+                                    <span class="item-name">👥 ${team.name}</span>
+                                    <div class="item-actions">
+                                        <button class="item-btn item-btn-edit" onclick="showEditTeamModal('${group.id}', '${team.id}')">수정</button>
+                                        <button class="item-btn item-btn-delete" onclick="deleteTeam('${group.id}', '${team.id}')">삭제</button>
+                                    </div>
+                                </div>
+                                <div class="members-list">
+                                    ${(team.members || []).map(m => `<span class="member-tag">${m}</span>`).join('')}
+                                    ${team.members?.length === 0 ? '<span style="color:#666">팀원 없음</span>' : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${(group.teams || []).length === 0 ? '<div class="empty-state" style="padding:20px">팀이 없습니다.</div>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 관리자 렌더링
+        function renderAdmins() {
+            const container = document.getElementById('adminsList');
+            
+            container.innerHTML = config.admins.map(admin => `
+                <div class="admin-item">
+                    <span class="admin-id">👤 ${admin.id}</span>
+                    ${admin.id !== 'admin' ? `<button class="item-btn item-btn-delete" onclick="deleteAdmin('${admin.id}')">삭제</button>` : '<span style="color:#666;font-size:0.8rem">기본 계정</span>'}
+                </div>
+            `).join('');
+        }
+
+        // 모달 닫기
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 그룹 추가 모달
+        function showAddGroupModal() {
+            editingGroupId = null;
+            document.getElementById('groupModalTitle').textContent = '그룹 추가';
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupModal').classList.add('active');
+        }
+
+        // 그룹 수정 모달
+        function showEditGroupModal(groupId) {
+            const group = config.groups.find(g => g.id === groupId);
+            if (!group) return;
+            
+            editingGroupId = groupId;
+            document.getElementById('groupModalTitle').textContent = '그룹 수정';
+            document.getElementById('groupName').value = group.name;
+            document.getElementById('groupModal').classList.add('active');
+        }
+
+        // 그룹 저장
+        function saveGroup() {
+            const name = document.getElementById('groupName').value.trim();
+            if (!name) {
+                showToast('그룹 이름을 입력하세요', 'error');
+                return;
+            }
+            
+            if (editingGroupId) {
+                const group = config.groups.find(g => g.id === editingGroupId);
+                if (group) group.name = name;
+            } else {
+                config.groups.push({
+                    id: 'group' + Date.now(),
+                    name: name,
+                    teams: []
+                });
+            }
+            
+            markChanged();
+            renderGroups();
+            closeModal('groupModal');
+            showToast('그룹이 저장되었습니다', 'success');
+        }
+
+        // 그룹 삭제
+        function deleteGroup(groupId) {
+            if (!confirm('이 그룹을 삭제하시겠습니까? 포함된 팀도 모두 삭제됩니다.')) return;
+            
+            config.groups = config.groups.filter(g => g.id !== groupId);
+            markChanged();
+            renderGroups();
+            showToast('그룹이 삭제되었습니다', 'success');
+        }
+
+        // 팀 추가 모달
+        function showAddTeamModal(groupId) {
+            editingTeamId = null;
+            editingGroupIdForTeam = groupId;
+            document.getElementById('teamModalTitle').textContent = '팀 추가';
+            document.getElementById('teamName').value = '';
+            document.getElementById('memberSearch').value = '';
+            renderMemberCheckboxes([]);
+            document.getElementById('teamModal').classList.add('active');
+        }
+
+        // 팀 수정 모달
+        function showEditTeamModal(groupId, teamId) {
+            const group = config.groups.find(g => g.id === groupId);
+            const team = group?.teams?.find(t => t.id === teamId);
+            if (!team) return;
+            
+            editingTeamId = teamId;
+            editingGroupIdForTeam = groupId;
+            document.getElementById('teamModalTitle').textContent = '팀 수정';
+            document.getElementById('teamName').value = team.name;
+            document.getElementById('memberSearch').value = '';
+            renderMemberCheckboxes(team.members || []);
+            document.getElementById('teamModal').classList.add('active');
+        }
+
+        // 멤버 체크박스 렌더링
+        function renderMemberCheckboxes(selectedMembers) {
+            const container = document.getElementById('memberSelectList');
+            const search = document.getElementById('memberSearch').value.toLowerCase();
+            
+            // 이미 다른 팀에 배정된 멤버 찾기
+            const assignedMembers = new Set();
+            config.groups.forEach(g => {
+                g.teams?.forEach(t => {
+                    if (!(editingGroupIdForTeam === g.id && editingTeamId === t.id)) {
+                        t.members?.forEach(m => assignedMembers.add(m));
+                    }
+                });
+            });
+            
+            const filtered = allMembers.filter(m => m.toLowerCase().includes(search));
+            
+            container.innerHTML = filtered.map(member => {
+                const isAssigned = assignedMembers.has(member);
+                const isChecked = selectedMembers.includes(member);
+                
+                return `
+                    <label class="member-checkbox" style="${isAssigned && !isChecked ? 'opacity:0.4' : ''}">
+                        <input type="checkbox" value="${member}" 
+                            ${isChecked ? 'checked' : ''} 
+                            ${isAssigned && !isChecked ? 'disabled' : ''}>
+                        <span>${member}</span>
+                        ${isAssigned && !isChecked ? '<span style="color:#f87171;font-size:0.75rem;margin-left:auto">다른팀</span>' : ''}
+                    </label>
+                `;
+            }).join('');
+        }
+
+        // 멤버 필터
+        function filterMembers() {
+            const currentChecked = [...document.querySelectorAll('#memberSelectList input:checked')].map(i => i.value);
+            renderMemberCheckboxes(currentChecked);
+        }
+
+        // 팀 저장
+        function saveTeam() {
+            const name = document.getElementById('teamName').value.trim();
+            if (!name) {
+                showToast('팀 이름을 입력하세요', 'error');
+                return;
+            }
+            
+            const selectedMembers = [...document.querySelectorAll('#memberSelectList input:checked')].map(i => i.value);
+            
+            const group = config.groups.find(g => g.id === editingGroupIdForTeam);
+            if (!group) return;
+            
+            if (!group.teams) group.teams = [];
+            
+            if (editingTeamId) {
+                const team = group.teams.find(t => t.id === editingTeamId);
+                if (team) {
+                    team.name = name;
+                    team.members = selectedMembers;
+                }
+            } else {
+                group.teams.push({
+                    id: 'team' + Date.now(),
+                    name: name,
+                    members: selectedMembers
+                });
+            }
+            
+            markChanged();
+            renderGroups();
+            closeModal('teamModal');
+            showToast('팀이 저장되었습니다', 'success');
+        }
+
+        // 팀 삭제
+        function deleteTeam(groupId, teamId) {
+            if (!confirm('이 팀을 삭제하시겠습니까?')) return;
+            
+            const group = config.groups.find(g => g.id === groupId);
+            if (group) {
+                group.teams = group.teams.filter(t => t.id !== teamId);
+            }
+            
+            markChanged();
+            renderGroups();
+            showToast('팀이 삭제되었습니다', 'success');
+        }
+
+        // 관리자 추가 모달
+        function showAddAdminModal() {
+            document.getElementById('newAdminId').value = '';
+            document.getElementById('newAdminPw').value = '';
+            document.getElementById('adminModal').classList.add('active');
+        }
+
+        // 관리자 추가
+        function addAdmin() {
+            const id = document.getElementById('newAdminId').value.trim();
+            const pw = document.getElementById('newAdminPw').value;
+            
+            if (!id || !pw) {
+                showToast('아이디와 비밀번호를 입력하세요', 'error');
+                return;
+            }
+            
+            if (config.admins.some(a => a.id === id)) {
+                showToast('이미 존재하는 아이디입니다', 'error');
+                return;
+            }
+            
+            config.admins.push({ id, password: pw });
+            markChanged();
+            renderAdmins();
+            closeModal('adminModal');
+            showToast('관리자가 추가되었습니다', 'success');
+        }
+
+        // 관리자 삭제
+        function deleteAdmin(id) {
+            if (id === 'admin') {
+                showToast('기본 계정은 삭제할 수 없습니다', 'error');
+                return;
+            }
+            
+            if (!confirm('이 관리자를 삭제하시겠습니까?')) return;
+            
+            config.admins = config.admins.filter(a => a.id !== id);
+            markChanged();
+            renderAdmins();
+            showToast('관리자가 삭제되었습니다', 'success');
+        }
+
+        // 비밀번호 변경
+        function changeMyPassword() {
+            const current = document.getElementById('currentPw').value;
+            const newPw = document.getElementById('newPw').value;
+            const confirm = document.getElementById('newPwConfirm').value;
+            
+            const admin = config.admins.find(a => a.id === currentUser);
+            
+            if (!admin || admin.password !== current) {
+                showToast('현재 비밀번호가 틀렸습니다', 'error');
+                return;
+            }
+            
+            if (newPw !== confirm) {
+                showToast('새 비밀번호가 일치하지 않습니다', 'error');
+                return;
+            }
+            
+            if (newPw.length < 4) {
+                showToast('비밀번호는 4자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            admin.password = newPw;
+            markChanged();
+            
+            document.getElementById('currentPw').value = '';
+            document.getElementById('newPw').value = '';
+            document.getElementById('newPwConfirm').value = '';
+            
+            showToast('비밀번호가 변경되었습니다. GitHub에 저장하세요.', 'success');
+        }
+
+        // 변경 표시
+        function markChanged() {
+            hasChanges = true;
+            document.getElementById('saveBar').style.display = 'flex';
+        }
+
+        // GitHub에 저장
+        async function saveConfig() {
+            const token = prompt('GitHub Personal Access Token을 입력하세요:\n(Settings > Developer settings > Personal access tokens에서 생성)');
+            
+            if (!token) return;
+            
+            try {
+                // 현재 파일의 SHA 가져오기
+                const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`;
+                let sha = '';
+                
+                try {
+                    const getRes = await fetch(getUrl, {
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (getRes.ok) {
+                        const data = await getRes.json();
+                        sha = data.sha;
+                    }
+                } catch (e) {}
+                
+                // 파일 업데이트
+                config.lastUpdated = new Date().toISOString();
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
+                
+                const body = {
+                    message: '⚙️ 설정 업데이트',
+                    content: content,
+                    branch: BRANCH
+                };
+                
+                if (sha) body.sha = sha;
+                
+                const res = await fetch(getUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (res.ok) {
+                    hasChanges = false;
+                    document.getElementById('saveBar').style.display = 'none';
+                    showToast('GitHub에 저장되었습니다!', 'success');
+                } else {
+                    throw new Error('저장 실패');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('저장 실패: ' + e.message, 'error');
+            }
+        }
+
+        // 토스트
+        function showToast(msg, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast active ' + type;
+            setTimeout(() => toast.classList.remove('active'), 3000);
+        }
+    </script>
+</body>
+</html>
