@@ -713,28 +713,33 @@
                 return;
             }
 
-            // 그룹별 총 걸음수 계산
+            // 오늘 날짜 (일평균 계산용)
+            const today = new Date();
+            const dayOfMonth = today.getDate();
+
+            // 그룹별 일평균 계산
             const groupStats = config.groups.map(group => {
                 let totalSteps = 0;
-                let totalDaily = 0;
                 let memberCount = 0;
 
                 (group.teams || []).forEach(team => {
                     (team.members || []).forEach(name => {
                         const data = getMemberData(name);
                         totalSteps += parseInt(data['월누적']) || 0;
-                        totalDaily += parseInt(data['오늘걸음수']) || 0;
                         memberCount++;
                     });
                 });
 
+                // 그룹 일평균 = (전체 월누적 합 / 인원수) / 경과일수
+                const avgDaily = memberCount > 0 ? Math.floor(totalSteps / memberCount / dayOfMonth) : 0;
+
                 return {
                     ...group,
                     totalSteps,
-                    totalDaily,
+                    avgDaily,
                     memberCount
                 };
-            }).sort((a, b) => b.totalSteps - a.totalSteps);
+            }).sort((a, b) => b.avgDaily - a.avgDaily);
 
             container.innerHTML = groupStats.map((group, idx) => {
                 const rank = idx + 1;
@@ -743,17 +748,18 @@
                 else if (rank === 2) rankClass = 'rank-2';
                 else if (rank === 3) rankClass = 'rank-3';
 
-                // 팀 순위 계산
+                // 팀 순위 계산 (팀도 일평균 기준)
                 const teamStats = (group.teams || []).map(team => {
                     let teamSteps = 0;
-                    let teamDaily = 0;
+                    let teamMemberCount = 0;
                     (team.members || []).forEach(name => {
                         const data = getMemberData(name);
                         teamSteps += parseInt(data['월누적']) || 0;
-                        teamDaily += parseInt(data['오늘걸음수']) || 0;
+                        teamMemberCount++;
                     });
-                    return { ...team, totalSteps: teamSteps, totalDaily: teamDaily };
-                }).sort((a, b) => b.totalSteps - a.totalSteps);
+                    const teamAvgDaily = teamMemberCount > 0 ? Math.floor(teamSteps / teamMemberCount / dayOfMonth) : 0;
+                    return { ...team, totalSteps: teamSteps, avgDaily: teamAvgDaily, memberCount: teamMemberCount };
+                }).sort((a, b) => b.avgDaily - a.avgDaily);
 
                 return `
                     <div class="group-rank-card" onclick="toggleGroup('${group.id}')">
@@ -764,8 +770,8 @@
                                 <div class="group-stats">${teamStats.length}팀 · ${group.memberCount}명</div>
                             </div>
                             <div class="group-steps">
-                                <div class="group-steps-value">${formatNumber(group.totalSteps)}</div>
-                                <div class="group-steps-label">총 걸음수</div>
+                                <div class="group-steps-value">${formatNumber(group.avgDaily)}</div>
+                                <div class="group-steps-label">일평균 (보/일)</div>
                             </div>
                         </div>
                         <div class="team-list" id="teams-${group.id}">
@@ -776,15 +782,17 @@
                                 else if (tRank === 2) tRankClass = 'rank-2';
                                 else if (tRank === 3) tRankClass = 'rank-3';
 
-                                // 멤버 순위
+                                // 멤버 순위 (개인 일평균 기준)
                                 const memberStats = (team.members || []).map(name => {
                                     const data = getMemberData(name);
+                                    const monthlyTotal = parseInt(data['월누적']) || 0;
+                                    const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
                                     return {
                                         name,
-                                        daily: parseInt(data['오늘걸음수']) || 0,
-                                        total: parseInt(data['월누적']) || 0
+                                        dailyAvg,
+                                        total: monthlyTotal
                                     };
-                                }).sort((a, b) => b.total - a.total);
+                                }).sort((a, b) => b.dailyAvg - a.dailyAvg);
 
                                 return `
                                     <div class="team-item" onclick="event.stopPropagation();toggleTeam('${group.id}-${team.id}')">
@@ -793,15 +801,15 @@
                                             <div class="team-name">${team.name}</div>
                                             <div class="team-member-count">${team.members?.length || 0}명</div>
                                         </div>
-                                        <div class="team-steps">${formatNumber(team.totalSteps)}</div>
+                                        <div class="team-steps">${formatNumber(team.avgDaily)} 보/일</div>
                                     </div>
                                     <div class="member-list" id="members-${group.id}-${team.id}">
                                         ${memberStats.map((m, mIdx) => `
                                             <div class="member-item" onclick="event.stopPropagation();showMemberDetail('${m.name}')">
                                                 <div class="member-rank-num">${mIdx + 1}</div>
                                                 <div class="member-name">${m.name}</div>
-                                                <div class="member-daily">+${formatNumber(m.daily)}</div>
-                                                <div class="member-total">${formatNumber(m.total)}</div>
+                                                <div class="member-daily">${formatNumber(m.dailyAvg)} 보/일</div>
+                                                <div class="member-total">(${formatNumber(m.total)})</div>
                                             </div>
                                         `).join('')}
                                     </div>
