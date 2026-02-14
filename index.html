@@ -19,7 +19,6 @@
             color: #333;
         }
 
-        /* 헤더 */
         .header {
             background: #1e293b;
             color: #fff;
@@ -50,22 +49,27 @@
             color: #94a3b8;
         }
 
-        .admin-link {
-            display: inline-block;
+        .header-buttons {
+            display: flex;
+            gap: 8px;
             margin-top: 8px;
+        }
+
+        .header-btn {
             padding: 6px 14px;
             background: rgba(255,255,255,0.1);
             border-radius: 6px;
             color: #fff;
             text-decoration: none;
             font-size: 0.8rem;
+            border: none;
+            cursor: pointer;
         }
 
-        .admin-link:hover {
+        .header-btn:hover {
             background: rgba(255,255,255,0.2);
         }
 
-        /* 컨테이너 */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -254,15 +258,15 @@
             text-align: right;
         }
 
-        /* 그룹 카드 */
-        .group-card {
+        /* 팀 카드 */
+        .team-card {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             overflow: hidden;
         }
 
-        .group-header {
+        .team-header {
             padding: 16px 20px;
             background: #f8fafc;
             display: flex;
@@ -272,129 +276,85 @@
             transition: background 0.2s;
         }
 
-        .group-header:hover {
+        .team-header:hover {
             background: #f1f5f9;
         }
 
-        .group-rank {
+        .team-rank {
             font-size: 1.2rem;
             font-weight: 700;
-            color: #3b82f6;
             min-width: 40px;
         }
 
-        .group-rank.gold { color: #d97706; }
-        .group-rank.silver { color: #64748b; }
-        .group-rank.bronze { color: #c2410c; }
+        .team-rank.gold { color: #d97706; }
+        .team-rank.silver { color: #64748b; }
+        .team-rank.bronze { color: #c2410c; }
+        .team-rank.default { color: #94a3b8; }
 
-        .group-info {
+        .team-info {
             flex: 1;
         }
 
-        .group-name {
+        .team-name {
             font-weight: 600;
             color: #1e293b;
             font-size: 1rem;
         }
 
-        .group-meta {
+        .team-meta {
             font-size: 0.8rem;
             color: #64748b;
             margin-top: 2px;
         }
 
-        .group-stats {
+        .team-stats {
             text-align: right;
         }
 
-        .group-avg {
+        .team-avg {
             font-size: 1.3rem;
             font-weight: 700;
             color: #1e293b;
         }
 
-        .group-avg-label {
+        .team-avg-label {
             font-size: 0.75rem;
             color: #64748b;
         }
 
-        .group-expand {
+        .team-expand {
             color: #94a3b8;
             font-size: 1.2rem;
             transition: transform 0.2s;
         }
 
-        .group-card.expanded .group-expand {
+        .team-card.expanded .team-expand {
             transform: rotate(180deg);
         }
 
-        .group-body {
+        .team-body {
             display: none;
             border-top: 1px solid #e2e8f0;
-        }
-
-        .group-card.expanded .group-body {
-            display: block;
-        }
-
-        /* 팀 섹션 */
-        .team-section {
             padding: 16px 20px;
-            border-bottom: 1px solid #f1f5f9;
         }
 
-        .team-section:last-child {
-            border-bottom: none;
-        }
-
-        .team-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-
-        .team-rank {
-            font-weight: 700;
-            color: #64748b;
-            font-size: 0.85rem;
-        }
-
-        .team-name {
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .team-avg {
-            margin-left: auto;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        .team-members {
-            display: none;
-            margin-top: 12px;
-            padding-left: 24px;
-        }
-
-        .team-section.expanded .team-members {
+        .team-card.expanded .team-body {
             display: block;
         }
 
         .member-row {
             display: flex;
             align-items: center;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #f8fafc;
             cursor: pointer;
         }
 
         .member-row:hover {
             background: #f8fafc;
-            margin: 0 -8px;
-            padding-left: 8px;
-            padding-right: 8px;
+            margin: 0 -12px;
+            padding-left: 12px;
+            padding-right: 12px;
         }
 
         .member-row:last-child {
@@ -402,9 +362,10 @@
         }
 
         .member-rank-num {
-            width: 24px;
-            font-size: 0.8rem;
+            width: 28px;
+            font-size: 0.85rem;
             color: #94a3b8;
+            font-weight: 600;
         }
 
         .member-name {
@@ -415,7 +376,7 @@
         .member-avg {
             font-weight: 600;
             color: #1e293b;
-            margin-right: 12px;
+            margin-right: 8px;
         }
 
         .member-total {
@@ -423,7 +384,7 @@
             color: #94a3b8;
         }
 
-        /* 차트 컨테이너 */
+        /* 차트 */
         .chart-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -435,6 +396,10 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .chart-full {
+            grid-column: 1 / -1;
         }
 
         .chart-title {
@@ -624,14 +589,9 @@
         }
 
         /* 검색 */
-        .search-box {
-            position: relative;
-        }
-
         .search-input {
             width: 100%;
             padding: 10px 14px;
-            padding-left: 36px;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             font-size: 0.9rem;
@@ -642,14 +602,6 @@
             outline: none;
             border-color: #3b82f6;
             background: #fff;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
         }
 
         /* 반응형 */
@@ -673,7 +625,7 @@
                 text-align: center;
             }
             .summary-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
             .container {
                 padding: 16px;
@@ -691,13 +643,13 @@
     <div class="header">
         <div>
             <div class="header-title">캔탑스 만보걷기 리포트</div>
-            <div class="header-subtitle">그룹별 일일 평균 걸음수 현황</div>
+            <div class="header-subtitle">팀별 일일 평균 걸음수 현황</div>
         </div>
         <div class="header-right">
             <div class="header-date" id="updateTime">데이터 로딩 중...</div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-                <button onclick="location.reload(true)" class="admin-link" style="border:none;cursor:pointer;">🔄 새로고침</button>
-                <a href="admin.html" class="admin-link">⚙️ 관리자</a>
+            <div class="header-buttons">
+                <button onclick="location.reload(true)" class="header-btn">🔄 새로고침</button>
+                <a href="admin.html" class="header-btn">⚙️ 관리자</a>
             </div>
         </div>
     </div>
@@ -706,7 +658,7 @@
         <!-- 요약 카드 -->
         <div class="summary-grid">
             <div class="summary-card">
-                <div class="summary-label">총 참여자</div>
+                <div class="summary-label">참여 인원</div>
                 <div class="summary-value" id="totalMembers">-</div>
                 <div class="summary-sub">명</div>
             </div>
@@ -716,9 +668,9 @@
                 <div class="summary-sub">보/일</div>
             </div>
             <div class="summary-card green">
-                <div class="summary-label">1위 그룹</div>
-                <div class="summary-value" id="topGroup">-</div>
-                <div class="summary-sub" id="topGroupAvg"></div>
+                <div class="summary-label">1위 팀</div>
+                <div class="summary-value" id="topTeam">-</div>
+                <div class="summary-sub" id="topTeamAvg"></div>
             </div>
             <div class="summary-card purple">
                 <div class="summary-label">이번달 경과</div>
@@ -727,19 +679,31 @@
             </div>
         </div>
 
+        <!-- 일별 추이 그래프 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">📈 일별 총 걸음수 추이</div>
+            </div>
+            <div class="section-body">
+                <div id="dailyChartContainer">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- 메인 섹션 -->
         <div class="section">
             <div class="section-header">
-                <div class="section-title">📊 순위 현황</div>
+                <div class="section-title">🏆 순위 현황</div>
                 <div class="tabs">
-                    <button class="tab active" data-tab="groups" onclick="switchTab('groups')">그룹 순위</button>
+                    <button class="tab active" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
                     <button class="tab" data-tab="all" onclick="switchTab('all')">전체 랭킹</button>
                 </div>
             </div>
             <div class="section-body">
-                <!-- 그룹 순위 -->
-                <div id="groupsTab">
-                    <div id="groupRankings">
+                <!-- 팀 순위 -->
+                <div id="teamsTab">
+                    <div id="teamRankings">
                         <div class="loading">
                             <div class="spinner"></div>
                             <div>데이터 불러오는 중...</div>
@@ -749,10 +713,9 @@
 
                 <!-- 전체 랭킹 -->
                 <div id="allTab" style="display:none;">
-                    <div class="search-box" style="margin-bottom:16px;">
-                        <span class="search-icon">🔍</span>
+                    <div style="margin-bottom:16px;">
                         <input type="text" class="search-input" id="searchInput" 
-                               placeholder="이름으로 검색..." oninput="filterAllRanking()">
+                               placeholder="🔍 이름으로 검색..." oninput="filterAllRanking()">
                     </div>
                     <div style="max-height:500px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
                         <table class="data-table">
@@ -772,55 +735,20 @@
             </div>
         </div>
 
-        <!-- 통계 섹션 -->
+        <!-- 통계 차트 -->
         <div class="section">
             <div class="section-header">
                 <div class="section-title">📊 통계</div>
-                <div class="tabs">
-                    <button class="tab active" data-stat="all" onclick="switchStatTab('all')">전체</button>
-                    <button class="tab" data-stat="group" onclick="switchStatTab('group')">그룹별</button>
-                    <button class="tab" data-stat="team" onclick="switchStatTab('team')">팀별</button>
-                </div>
             </div>
             <div class="section-body">
-                <!-- 전체 통계 -->
-                <div id="statAll">
-                    <div class="chart-grid">
-                        <div class="chart-box">
-                            <div class="chart-title">📈 그룹별 일평균 비교</div>
-                            <canvas id="groupChart"></canvas>
-                        </div>
-                        <div class="chart-box">
-                            <div class="chart-title">📊 걸음수 분포 (전체)</div>
-                            <canvas id="distributionChart"></canvas>
-                        </div>
+                <div class="chart-grid">
+                    <div class="chart-box">
+                        <div class="chart-title">팀별 일평균 비교</div>
+                        <canvas id="teamChart"></canvas>
                     </div>
-                </div>
-
-                <!-- 그룹별 통계 -->
-                <div id="statGroup" style="display:none;">
-                    <div style="margin-bottom:16px;">
-                        <select id="groupSelect" class="search-input" style="width:auto;min-width:200px;" onchange="renderGroupStat()">
-                            <option value="">그룹 선택</option>
-                        </select>
-                    </div>
-                    <div id="groupStatContent">
-                        <div style="text-align:center;color:#94a3b8;padding:40px;">그룹을 선택하세요</div>
-                    </div>
-                </div>
-
-                <!-- 팀별 통계 -->
-                <div id="statTeam" style="display:none;">
-                    <div style="margin-bottom:16px;display:flex;gap:12px;">
-                        <select id="teamGroupSelect" class="search-input" style="width:auto;min-width:200px;" onchange="updateTeamSelect()">
-                            <option value="">그룹 선택</option>
-                        </select>
-                        <select id="teamSelect" class="search-input" style="width:auto;min-width:200px;" onchange="renderTeamStat()">
-                            <option value="">팀 선택</option>
-                        </select>
-                    </div>
-                    <div id="teamStatContent">
-                        <div style="text-align:center;color:#94a3b8;padding:40px;">팀을 선택하세요</div>
+                    <div class="chart-box">
+                        <div class="chart-title">걸음수 분포</div>
+                        <canvas id="distributionChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -844,42 +772,52 @@
     </div>
 
     <script>
-        // GitHub 설정
         const REPO_OWNER = 'tnsgud052812-boop';
         const REPO_NAME = 'Pacer';
         const BRANCH = 'main';
 
-        // 데이터
-        let config = { groups: [] };
+        let config = { teams: [] };
         let latestData = [];
-        let groupChartInstance = null;
+        let dailyHistory = [];
+        let teamChartInstance = null;
         let distChartInstance = null;
+        let dailyChartInstance = null;
 
-        // 초기화
         document.addEventListener('DOMContentLoaded', loadAllData);
 
         async function loadAllData() {
-            await Promise.all([loadConfig(), loadLatestData()]);
+            await Promise.all([loadConfig(), loadLatestData(), loadDailyHistory()]);
             renderSummary();
-            renderGroupRankings();
+            renderTeamRankings();
             renderAllRanking();
             renderCharts();
+            renderDailyChart();
         }
 
-        // 설정 로드
         async function loadConfig() {
             try {
                 const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/config.json?t=${Date.now()}`;
                 const res = await fetch(url);
                 if (res.ok) {
-                    config = await res.json();
+                    const data = await res.json();
+                    // 그룹 구조에서 팀만 추출 (하위 호환)
+                    if (data.groups) {
+                        config.teams = [];
+                        data.groups.forEach(g => {
+                            (g.teams || []).forEach(t => {
+                                config.teams.push(t);
+                            });
+                        });
+                        config.admins = data.admins;
+                    } else if (data.teams) {
+                        config = data;
+                    }
                 }
             } catch (e) {
                 console.error('설정 로드 실패:', e);
             }
         }
 
-        // 최신 데이터 로드
         async function loadLatestData() {
             try {
                 const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv?t=${Date.now()}`;
@@ -893,6 +831,44 @@
                 }
             } catch (e) {
                 console.error('데이터 로드 실패:', e);
+            }
+        }
+
+        async function loadDailyHistory() {
+            try {
+                const now = new Date();
+                const monthFolder = `${now.getFullYear()}년${now.getMonth() + 1}월`;
+                
+                // 이번 달 일별 데이터 로드 (최근 14일)
+                dailyHistory = [];
+                for (let i = 1; i <= now.getDate(); i++) {
+                    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/daily/${monthFolder}/${dateStr}.csv`;
+                    
+                    try {
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            const csv = await res.text();
+                            const data = parseCSV(csv);
+                            
+                            // 등록된 멤버의 총 걸음수 합계
+                            const registered = getRegisteredMembers();
+                            let totalDaily = 0;
+                            data.forEach(d => {
+                                if (registered.has(d['이름'])) {
+                                    totalDaily += parseInt(d['오늘걸음수']) || 0;
+                                }
+                            });
+                            
+                            dailyHistory.push({
+                                date: `${now.getMonth() + 1}/${i}`,
+                                total: totalDaily
+                            });
+                        }
+                    } catch (e) {}
+                }
+            } catch (e) {
+                console.error('일별 데이터 로드 실패:', e);
             }
         }
 
@@ -912,87 +888,49 @@
             return data;
         }
 
-        // 탭 전환
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
             
-            document.getElementById('groupsTab').style.display = tab === 'groups' ? 'block' : 'none';
+            document.getElementById('teamsTab').style.display = tab === 'teams' ? 'block' : 'none';
             document.getElementById('allTab').style.display = tab === 'all' ? 'block' : 'none';
         }
 
-        // 멤버 데이터 가져오기
         function getMemberData(name) {
             return latestData.find(d => d['이름'] === name) || {};
         }
 
-        // 등록된 멤버 목록 가져오기
         function getRegisteredMembers() {
             const members = new Set();
-            config.groups.forEach(g => {
-                (g.teams || []).forEach(t => {
-                    (t.members || []).forEach(m => members.add(m));
-                });
+            (config.teams || []).forEach(t => {
+                (t.members || []).forEach(m => members.add(m));
             });
             return members;
         }
 
-        // 등록된 멤버 데이터만 가져오기
         function getRegisteredMemberData() {
             const registered = getRegisteredMembers();
             return latestData.filter(d => registered.has(d['이름']));
         }
 
-        // 요약 렌더링
-        function renderSummary() {
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-            
-            document.getElementById('dayOfMonth').textContent = dayOfMonth;
-            
-            // 등록된 멤버만 대상
-            const registeredData = getRegisteredMemberData();
-            document.getElementById('totalMembers').textContent = registeredData.length;
-
-            // 전체 일평균 (등록된 멤버만)
-            let totalSteps = 0;
-            registeredData.forEach(d => {
-                totalSteps += parseInt(d['월누적']) || 0;
-            });
-            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayOfMonth) : 0;
-            document.getElementById('totalAvg').textContent = formatNumber(totalAvg);
-
-            // 1위 그룹
-            if (config.groups.length > 0) {
-                const groupStats = getGroupStats();
-                if (groupStats.length > 0) {
-                    document.getElementById('topGroup').textContent = groupStats[0].name;
-                    document.getElementById('topGroupAvg').textContent = formatNumber(groupStats[0].avgDaily) + ' 보/일';
-                }
-            }
-        }
-
-        // 그룹 통계 계산
-        function getGroupStats() {
+        function getTeamStats() {
             const today = new Date();
             const dayOfMonth = today.getDate();
 
-            return config.groups.map(group => {
+            return (config.teams || []).map(team => {
                 let totalSteps = 0;
                 let memberCount = 0;
 
-                (group.teams || []).forEach(team => {
-                    (team.members || []).forEach(name => {
-                        const data = getMemberData(name);
-                        totalSteps += parseInt(data['월누적']) || 0;
-                        memberCount++;
-                    });
+                (team.members || []).forEach(name => {
+                    const data = getMemberData(name);
+                    totalSteps += parseInt(data['월누적']) || 0;
+                    memberCount++;
                 });
 
                 const avgDaily = memberCount > 0 ? Math.floor(totalSteps / memberCount / dayOfMonth) : 0;
 
                 return {
-                    ...group,
+                    ...team,
                     totalSteps,
                     avgDaily,
                     memberCount
@@ -1000,15 +938,38 @@
             }).sort((a, b) => b.avgDaily - a.avgDaily);
         }
 
-        // 그룹 순위 렌더링
-        function renderGroupRankings() {
-            const container = document.getElementById('groupRankings');
+        function renderSummary() {
+            const today = new Date();
+            const dayOfMonth = today.getDate();
             
-            if (config.groups.length === 0) {
+            document.getElementById('dayOfMonth').textContent = dayOfMonth;
+            
+            const registeredData = getRegisteredMemberData();
+            document.getElementById('totalMembers').textContent = registeredData.length;
+
+            let totalSteps = 0;
+            registeredData.forEach(d => {
+                totalSteps += parseInt(d['월누적']) || 0;
+            });
+            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayOfMonth) : 0;
+            document.getElementById('totalAvg').textContent = formatNumber(totalAvg);
+
+            const teamStats = getTeamStats();
+            if (teamStats.length > 0) {
+                document.getElementById('topTeam').textContent = teamStats[0].name;
+                document.getElementById('topTeamAvg').textContent = formatNumber(teamStats[0].avgDaily) + ' 보/일';
+            }
+        }
+
+        function renderTeamRankings() {
+            const container = document.getElementById('teamRankings');
+            const teamStats = getTeamStats();
+            
+            if (teamStats.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center;padding:40px;color:#94a3b8;">
-                        아직 그룹이 설정되지 않았습니다.<br>
-                        <a href="admin.html" style="color:#3b82f6;">관리자 페이지</a>에서 그룹을 추가하세요.
+                        아직 팀이 설정되지 않았습니다.<br>
+                        <a href="admin.html" style="color:#3b82f6;">관리자 페이지</a>에서 팀을 추가하세요.
                     </div>
                 `;
                 return;
@@ -1016,111 +977,69 @@
 
             const today = new Date();
             const dayOfMonth = today.getDate();
-            const groupStats = getGroupStats();
-            const maxAvg = Math.max(...groupStats.map(g => g.avgDaily));
 
-            container.innerHTML = groupStats.map((group, idx) => {
+            container.innerHTML = teamStats.map((team, idx) => {
                 const rank = idx + 1;
-                let rankClass = '';
+                let rankClass = 'default';
                 if (rank === 1) rankClass = 'gold';
                 else if (rank === 2) rankClass = 'silver';
                 else if (rank === 3) rankClass = 'bronze';
 
-                // 팀 순위 계산
-                const teamStats = (group.teams || []).map(team => {
-                    let teamSteps = 0;
-                    let teamMemberCount = 0;
-                    (team.members || []).forEach(name => {
-                        const data = getMemberData(name);
-                        teamSteps += parseInt(data['월누적']) || 0;
-                        teamMemberCount++;
-                    });
-                    const teamAvgDaily = teamMemberCount > 0 ? Math.floor(teamSteps / teamMemberCount / dayOfMonth) : 0;
-                    return { ...team, totalSteps: teamSteps, avgDaily: teamAvgDaily, memberCount: teamMemberCount };
-                }).sort((a, b) => b.avgDaily - a.avgDaily);
+                const memberStats = (team.members || []).map(name => {
+                    const data = getMemberData(name);
+                    const monthlyTotal = parseInt(data['월누적']) || 0;
+                    const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
+                    return { name, dailyAvg, total: monthlyTotal };
+                }).sort((a, b) => b.dailyAvg - a.dailyAvg);
 
                 return `
-                    <div class="group-card" id="group-${group.id}">
-                        <div class="group-header" onclick="toggleGroup('${group.id}')">
-                            <div class="group-rank ${rankClass}">#${rank}</div>
-                            <div class="group-info">
-                                <div class="group-name">${group.name}</div>
-                                <div class="group-meta">${teamStats.length}팀 · ${group.memberCount}명</div>
+                    <div class="team-card" id="team-${team.id}">
+                        <div class="team-header" onclick="toggleTeam('${team.id}')">
+                            <div class="team-rank ${rankClass}">#${rank}</div>
+                            <div class="team-info">
+                                <div class="team-name">${team.name}</div>
+                                <div class="team-meta">${team.memberCount}명</div>
                             </div>
-                            <div class="group-stats">
-                                <div class="group-avg">${formatNumber(group.avgDaily)}</div>
-                                <div class="group-avg-label">보/일</div>
+                            <div class="team-stats">
+                                <div class="team-avg">${formatNumber(team.avgDaily)}</div>
+                                <div class="team-avg-label">보/일</div>
                             </div>
-                            <div class="group-expand">▼</div>
+                            <div class="team-expand">▼</div>
                         </div>
-                        <div class="group-body">
-                            ${teamStats.map((team, tIdx) => {
-                                const memberStats = (team.members || []).map(name => {
-                                    const data = getMemberData(name);
-                                    const monthlyTotal = parseInt(data['월누적']) || 0;
-                                    const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
-                                    return { name, dailyAvg, total: monthlyTotal };
-                                }).sort((a, b) => b.dailyAvg - a.dailyAvg);
-
-                                return `
-                                    <div class="team-section" id="team-${group.id}-${team.id}">
-                                        <div class="team-header" onclick="toggleTeam('${group.id}-${team.id}')">
-                                            <span class="team-rank">${tIdx + 1}위</span>
-                                            <span class="team-name">${team.name}</span>
-                                            <span class="team-avg">${formatNumber(team.avgDaily)} 보/일</span>
-                                        </div>
-                                        <div class="team-members">
-                                            ${memberStats.map((m, mIdx) => `
-                                                <div class="member-row" onclick="showMemberDetail('${m.name}')">
-                                                    <span class="member-rank-num">${mIdx + 1}</span>
-                                                    <span class="member-name">${m.name}</span>
-                                                    <span class="member-avg">${formatNumber(m.dailyAvg)}</span>
-                                                    <span class="member-total">(${formatNumber(m.total)})</span>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                        <div class="team-body">
+                            ${memberStats.map((m, mIdx) => `
+                                <div class="member-row" onclick="showMemberDetail('${m.name}')">
+                                    <span class="member-rank-num">${mIdx + 1}</span>
+                                    <span class="member-name">${m.name}</span>
+                                    <span class="member-avg">${formatNumber(m.dailyAvg)}</span>
+                                    <span class="member-total">(${formatNumber(m.total)})</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // 그룹 토글
-        function toggleGroup(groupId) {
-            const el = document.getElementById(`group-${groupId}`);
-            el.classList.toggle('expanded');
-        }
-
-        // 팀 토글
         function toggleTeam(teamId) {
-            event.stopPropagation();
             const el = document.getElementById(`team-${teamId}`);
             el.classList.toggle('expanded');
         }
 
-        // 전체 랭킹 렌더링 (등록된 멤버만)
         function renderAllRanking(filter = '') {
             const tbody = document.getElementById('allRankingBody');
             const today = new Date();
             const dayOfMonth = today.getDate();
             
-            // 등록된 멤버만 대상
             const registeredData = getRegisteredMemberData();
             
-            // 멤버별 소속 정보 매핑
             const memberTeamMap = {};
-            config.groups.forEach(g => {
-                (g.teams || []).forEach(t => {
-                    (t.members || []).forEach(m => {
-                        memberTeamMap[m] = `${g.name} > ${t.name}`;
-                    });
+            (config.teams || []).forEach(t => {
+                (t.members || []).forEach(m => {
+                    memberTeamMap[m] = t.name;
                 });
             });
 
-            // 일평균 기준 정렬
             let sortedData = registeredData.map(d => {
                 const monthlyTotal = parseInt(d['월누적']) || 0;
                 const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
@@ -1168,29 +1087,82 @@
             renderAllRanking(query);
         }
 
-        // 차트 렌더링 (등록된 멤버만)
-        function renderCharts() {
-            const groupStats = getGroupStats();
-            
-            // 그룹이 없으면 차트 안 그림
-            if (groupStats.length === 0) {
-                document.getElementById('groupChart').parentElement.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">그룹 데이터 없음</div>';
-                document.getElementById('distributionChart').parentElement.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">데이터 없음</div>';
+        function renderDailyChart() {
+            if (dailyHistory.length === 0) {
+                document.getElementById('dailyChartContainer').innerHTML = 
+                    '<div style="text-align:center;color:#94a3b8;padding:40px;">일별 데이터 없음</div>';
                 return;
             }
 
-            // 그룹 비교 차트
-            const groupCtx = document.getElementById('groupChart');
-            if (groupChartInstance) groupChartInstance.destroy();
+            const ctx = document.getElementById('dailyChart');
+            if (dailyChartInstance) dailyChartInstance.destroy();
+
+            dailyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyHistory.map(d => d.date),
+                    datasets: [{
+                        label: '전체 걸음수',
+                        data: dailyHistory.map(d => d.total),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${formatNumber(ctx.raw)} 걸음`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: (v) => formatNumber(v)
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCharts() {
+            const teamStats = getTeamStats();
             
-            groupChartInstance = new Chart(groupCtx, {
+            if (teamStats.length === 0) {
+                document.getElementById('teamChart').parentElement.innerHTML = 
+                    '<div style="text-align:center;color:#94a3b8;padding:40px;">팀 데이터 없음</div>';
+                document.getElementById('distributionChart').parentElement.innerHTML = 
+                    '<div style="text-align:center;color:#94a3b8;padding:40px;">데이터 없음</div>';
+                return;
+            }
+
+            // 팀 비교 차트
+            const teamCtx = document.getElementById('teamChart');
+            if (teamChartInstance) teamChartInstance.destroy();
+            
+            teamChartInstance = new Chart(teamCtx, {
                 type: 'bar',
                 data: {
-                    labels: groupStats.map(g => g.name),
+                    labels: teamStats.map(t => t.name),
                     datasets: [{
                         label: '일평균 (보/일)',
-                        data: groupStats.map(g => g.avgDaily),
-                        backgroundColor: groupStats.map((g, i) => {
+                        data: teamStats.map(t => t.avgDaily),
+                        backgroundColor: teamStats.map((t, i) => {
                             if (i === 0) return '#f59e0b';
                             if (i === 1) return '#94a3b8';
                             if (i === 2) return '#c2410c';
@@ -1203,22 +1175,15 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     aspectRatio: 2,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
 
-            // 분포 차트 (등록된 멤버만)
+            // 분포 차트
             const today = new Date();
             const dayOfMonth = today.getDate();
             
@@ -1228,7 +1193,6 @@
                 return Math.floor(total / dayOfMonth);
             });
 
-            // 구간별 분포
             const ranges = [
                 { label: '5천 미만', min: 0, max: 5000 },
                 { label: '5천~1만', min: 5000, max: 10000 },
@@ -1267,7 +1231,6 @@
             });
         }
 
-        // 개인 상세 모달
         async function showMemberDetail(name) {
             const modal = document.getElementById('memberModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -1283,7 +1246,6 @@
             const monthlyTotal = parseInt(currentData['월누적']) || 0;
             const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
             
-            // 개인 히스토리 로드
             const monthStr = `${today.getFullYear()}년${today.getMonth() + 1}월`;
             const fileName = encodeURIComponent(`${name}_${monthStr}_Data.csv`);
             const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
@@ -1297,7 +1259,6 @@
                 }
             } catch (e) {}
 
-            // 통계 계산
             const dailySteps = history.map(h => parseInt(h['오늘걸음수']) || 0).filter(v => v > 0);
             const totalDays = dailySteps.length;
             const avgSteps = totalDays > 0 ? Math.floor(dailySteps.reduce((a,b) => a+b, 0) / totalDays) : 0;
@@ -1338,13 +1299,12 @@
                 </div>
             `;
 
-            // 개인 차트
             renderMemberChart(history);
             renderCalendar(today.getFullYear(), today.getMonth(), history);
         }
 
         function renderMemberChart(history) {
-            const ctx = document.getElementById('memberChart').getContext('2d');
+            const ctx = document.getElementById('memberChart');
             
             new Chart(ctx, {
                 type: 'line',
@@ -1413,223 +1373,6 @@
 
         function formatNumber(n) {
             return n.toLocaleString('ko-KR');
-        }
-
-        // 통계 탭 전환
-        function switchStatTab(tab) {
-            document.querySelectorAll('[data-stat]').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-stat="${tab}"]`).classList.add('active');
-            
-            document.getElementById('statAll').style.display = tab === 'all' ? 'block' : 'none';
-            document.getElementById('statGroup').style.display = tab === 'group' ? 'block' : 'none';
-            document.getElementById('statTeam').style.display = tab === 'team' ? 'block' : 'none';
-
-            if (tab === 'group') {
-                populateGroupSelect();
-            } else if (tab === 'team') {
-                populateTeamGroupSelect();
-            }
-        }
-
-        // 그룹 선택 목록 채우기
-        function populateGroupSelect() {
-            const select = document.getElementById('groupSelect');
-            select.innerHTML = '<option value="">그룹 선택</option>' + 
-                config.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-        }
-
-        // 팀 탭의 그룹 선택 목록 채우기
-        function populateTeamGroupSelect() {
-            const select = document.getElementById('teamGroupSelect');
-            select.innerHTML = '<option value="">그룹 선택</option>' + 
-                config.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-            document.getElementById('teamSelect').innerHTML = '<option value="">팀 선택</option>';
-        }
-
-        // 팀 선택 목록 업데이트
-        function updateTeamSelect() {
-            const groupId = document.getElementById('teamGroupSelect').value;
-            const teamSelect = document.getElementById('teamSelect');
-            
-            if (!groupId) {
-                teamSelect.innerHTML = '<option value="">팀 선택</option>';
-                return;
-            }
-
-            const group = config.groups.find(g => g.id === groupId);
-            teamSelect.innerHTML = '<option value="">팀 선택</option>' + 
-                (group?.teams || []).map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        }
-
-        // 그룹 통계 렌더링
-        let groupStatChart = null;
-        function renderGroupStat() {
-            const groupId = document.getElementById('groupSelect').value;
-            const container = document.getElementById('groupStatContent');
-            
-            if (!groupId) {
-                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">그룹을 선택하세요</div>';
-                return;
-            }
-
-            const group = config.groups.find(g => g.id === groupId);
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-
-            // 팀별 통계
-            const teamStats = (group.teams || []).map(team => {
-                let teamSteps = 0;
-                let memberCount = 0;
-                (team.members || []).forEach(name => {
-                    const data = getMemberData(name);
-                    teamSteps += parseInt(data['월누적']) || 0;
-                    memberCount++;
-                });
-                const avgDaily = memberCount > 0 ? Math.floor(teamSteps / memberCount / dayOfMonth) : 0;
-                return { name: team.name, avgDaily, memberCount, totalSteps: teamSteps };
-            }).sort((a, b) => b.avgDaily - a.avgDaily);
-
-            const groupTotal = teamStats.reduce((sum, t) => sum + t.totalSteps, 0);
-            const groupMembers = teamStats.reduce((sum, t) => sum + t.memberCount, 0);
-            const groupAvg = groupMembers > 0 ? Math.floor(groupTotal / groupMembers / dayOfMonth) : 0;
-
-            container.innerHTML = `
-                <div class="summary-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
-                    <div class="summary-card">
-                        <div class="summary-label">그룹 일평균</div>
-                        <div class="summary-value">${formatNumber(groupAvg)}</div>
-                        <div class="summary-sub">보/일</div>
-                    </div>
-                    <div class="summary-card gold">
-                        <div class="summary-label">총 인원</div>
-                        <div class="summary-value">${groupMembers}</div>
-                        <div class="summary-sub">명</div>
-                    </div>
-                    <div class="summary-card green">
-                        <div class="summary-label">팀 수</div>
-                        <div class="summary-value">${teamStats.length}</div>
-                        <div class="summary-sub">팀</div>
-                    </div>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">📊 ${group.name} 팀별 일평균</div>
-                    <canvas id="groupStatChart"></canvas>
-                </div>
-            `;
-
-            // 차트 그리기
-            if (groupStatChart) groupStatChart.destroy();
-            groupStatChart = new Chart(document.getElementById('groupStatChart'), {
-                type: 'bar',
-                data: {
-                    labels: teamStats.map(t => t.name),
-                    datasets: [{
-                        label: '일평균 (보/일)',
-                        data: teamStats.map(t => t.avgDaily),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 2.5,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // 팀 통계 렌더링
-        let teamStatChart = null;
-        function renderTeamStat() {
-            const groupId = document.getElementById('teamGroupSelect').value;
-            const teamId = document.getElementById('teamSelect').value;
-            const container = document.getElementById('teamStatContent');
-            
-            if (!groupId || !teamId) {
-                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">팀을 선택하세요</div>';
-                return;
-            }
-
-            const group = config.groups.find(g => g.id === groupId);
-            const team = group?.teams?.find(t => t.id === teamId);
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-
-            // 멤버별 통계
-            const memberStats = (team.members || []).map(name => {
-                const data = getMemberData(name);
-                const monthlyTotal = parseInt(data['월누적']) || 0;
-                const avgDaily = Math.floor(monthlyTotal / dayOfMonth);
-                return { name, avgDaily, total: monthlyTotal };
-            }).sort((a, b) => b.avgDaily - a.avgDaily);
-
-            const teamTotal = memberStats.reduce((sum, m) => sum + m.total, 0);
-            const teamAvg = memberStats.length > 0 ? Math.floor(teamTotal / memberStats.length / dayOfMonth) : 0;
-            const maxMember = memberStats[0] || { name: '-', avgDaily: 0 };
-            const minMember = memberStats[memberStats.length - 1] || { name: '-', avgDaily: 0 };
-
-            container.innerHTML = `
-                <div class="summary-grid" style="margin-bottom:20px;">
-                    <div class="summary-card">
-                        <div class="summary-label">팀 일평균</div>
-                        <div class="summary-value">${formatNumber(teamAvg)}</div>
-                        <div class="summary-sub">보/일</div>
-                    </div>
-                    <div class="summary-card gold">
-                        <div class="summary-label">팀 인원</div>
-                        <div class="summary-value">${memberStats.length}</div>
-                        <div class="summary-sub">명</div>
-                    </div>
-                    <div class="summary-card green">
-                        <div class="summary-label">1위</div>
-                        <div class="summary-value">${maxMember.name}</div>
-                        <div class="summary-sub">${formatNumber(maxMember.avgDaily)} 보/일</div>
-                    </div>
-                    <div class="summary-card purple">
-                        <div class="summary-label">최저</div>
-                        <div class="summary-value">${minMember.name}</div>
-                        <div class="summary-sub">${formatNumber(minMember.avgDaily)} 보/일</div>
-                    </div>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">📊 ${team.name} 멤버별 일평균</div>
-                    <canvas id="teamStatChart"></canvas>
-                </div>
-            `;
-
-            // 차트 그리기
-            if (teamStatChart) teamStatChart.destroy();
-            teamStatChart = new Chart(document.getElementById('teamStatChart'), {
-                type: 'bar',
-                data: {
-                    labels: memberStats.map(m => m.name),
-                    datasets: [{
-                        label: '일평균 (보/일)',
-                        data: memberStats.map(m => m.avgDaily),
-                        backgroundColor: memberStats.map((m, i) => {
-                            if (i === 0) return '#f59e0b';
-                            if (i === memberStats.length - 1) return '#ef4444';
-                            return '#3b82f6';
-                        }),
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 2,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
         }
     </script>
 </body>
