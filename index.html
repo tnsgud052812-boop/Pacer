@@ -424,15 +424,11 @@
         }
 
         /* 차트 컨테이너 */
-        .chart-container {
-            height: 300px;
-            margin-top: 20px;
-        }
-
         .chart-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
+            margin-bottom: 30px;
         }
 
         .chart-box {
@@ -440,6 +436,8 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            height: 350px;
+            overflow: hidden;
         }
 
         .chart-title {
@@ -447,6 +445,11 @@
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 16px;
+        }
+
+        .chart-wrapper {
+            height: 280px;
+            position: relative;
         }
 
         /* 모달 */
@@ -700,7 +703,10 @@
         </div>
         <div class="header-right">
             <div class="header-date" id="updateTime">데이터 로딩 중...</div>
-            <a href="admin.html" class="admin-link">⚙️ 관리자</a>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button onclick="location.reload(true)" class="admin-link" style="border:none;cursor:pointer;">🔄 새로고침</button>
+                <a href="admin.html" class="admin-link">⚙️ 관리자</a>
+            </div>
         </div>
     </div>
 
@@ -776,11 +782,15 @@
         <div class="chart-grid">
             <div class="chart-box">
                 <div class="chart-title">📈 그룹별 일평균 비교</div>
-                <canvas id="groupChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="groupChart"></canvas>
+                </div>
             </div>
             <div class="chart-box">
                 <div class="chart-title">📊 걸음수 분포</div>
-                <canvas id="distributionChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="distributionChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
