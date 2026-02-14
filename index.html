@@ -604,6 +604,40 @@
             background: #fff;
         }
 
+        /* 멤버 체크박스 */
+        .member-checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .member-checkbox-label:hover {
+            border-color: #3b82f6;
+        }
+
+        .member-checkbox-label.checked {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .member-checkbox-label input {
+            display: none;
+        }
+
+        .member-color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
         /* 반응형 */
         @media (max-width: 900px) {
             .summary-grid {
@@ -683,8 +717,13 @@
         <div class="section">
             <div class="section-header">
                 <div class="section-title">📈 멤버별 월누적 추이</div>
+                <div style="display:flex;gap:8px;">
+                    <button class="tab" onclick="selectAllMembers(true)">전체 선택</button>
+                    <button class="tab" onclick="selectAllMembers(false)">전체 해제</button>
+                </div>
             </div>
             <div class="section-body">
+                <div id="memberCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:#f8fafc;border-radius:8px;"></div>
                 <div id="dailyChartContainer">
                     <canvas id="dailyChart"></canvas>
                 </div>
@@ -795,6 +834,7 @@
             renderTeamRankings();
             renderAllRanking();
             renderCharts();
+            renderMemberCheckboxes();
             renderDailyChart();
         }
 
@@ -1098,6 +1138,71 @@
             renderAllRanking(query);
         }
 
+        // 색상 팔레트 (전역)
+        const chartColors = [
+            '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+            '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+            '#14b8a6', '#e11d48', '#0ea5e9', '#22c55e', '#a855f7',
+            '#f43f5e', '#0891b2', '#65a30d', '#ea580c', '#7c3aed'
+        ];
+        
+        let selectedMembers = new Set();
+        let memberColorMap = {};
+
+        function renderMemberCheckboxes() {
+            const container = document.getElementById('memberCheckboxes');
+            if (!dailyHistory.memberHistory) {
+                container.innerHTML = '<span style="color:#94a3b8;">데이터 없음</span>';
+                return;
+            }
+
+            const members = Object.keys(dailyHistory.memberHistory).filter(name => 
+                dailyHistory.memberHistory[name].some(v => v !== null)
+            );
+
+            // 색상 매핑
+            members.forEach((name, idx) => {
+                memberColorMap[name] = chartColors[idx % chartColors.length];
+                selectedMembers.add(name); // 기본 전체 선택
+            });
+
+            container.innerHTML = members.map(name => `
+                <label class="member-checkbox-label checked" id="label-${name.replace(/\s/g, '_')}">
+                    <input type="checkbox" checked onchange="toggleMember('${name}', this.checked)">
+                    <span class="member-color-dot" style="background:${memberColorMap[name]}"></span>
+                    <span>${name}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleMember(name, checked) {
+            const label = document.getElementById(`label-${name.replace(/\s/g, '_')}`);
+            if (checked) {
+                selectedMembers.add(name);
+                label.classList.add('checked');
+            } else {
+                selectedMembers.delete(name);
+                label.classList.remove('checked');
+            }
+            renderDailyChart();
+        }
+
+        function selectAllMembers(selectAll) {
+            const checkboxes = document.querySelectorAll('#memberCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll;
+                const name = cb.parentElement.querySelector('span:last-child').textContent;
+                if (selectAll) {
+                    selectedMembers.add(name);
+                    cb.parentElement.classList.add('checked');
+                } else {
+                    selectedMembers.delete(name);
+                    cb.parentElement.classList.remove('checked');
+                }
+            });
+            renderDailyChart();
+        }
+
         function renderDailyChart() {
             if (!dailyHistory.dates || dailyHistory.dates.length === 0) {
                 document.getElementById('dailyChartContainer').innerHTML = 
@@ -1105,36 +1210,33 @@
                 return;
             }
 
+            // 캔버스 다시 생성 (차트 리셋)
+            document.getElementById('dailyChartContainer').innerHTML = '<canvas id="dailyChart"></canvas>';
             const ctx = document.getElementById('dailyChart');
-            if (dailyChartInstance) dailyChartInstance.destroy();
 
-            // 색상 팔레트
-            const colors = [
-                '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-                '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
-                '#14b8a6', '#e11d48', '#0ea5e9', '#22c55e', '#a855f7',
-                '#f43f5e', '#0891b2', '#65a30d', '#ea580c', '#7c3aed'
-            ];
-
-            // 데이터셋 생성
+            // 선택된 멤버만 데이터셋 생성
             const datasets = [];
-            let colorIdx = 0;
             
             for (const [name, data] of Object.entries(dailyHistory.memberHistory)) {
-                // null이 아닌 데이터가 있는 멤버만
-                if (data.some(v => v !== null)) {
+                if (selectedMembers.has(name) && data.some(v => v !== null)) {
                     datasets.push({
                         label: name,
                         data: data,
-                        borderColor: colors[colorIdx % colors.length],
+                        borderColor: memberColorMap[name],
                         backgroundColor: 'transparent',
                         tension: 0.3,
                         pointRadius: 3,
                         pointHoverRadius: 5,
-                        borderWidth: 2
+                        borderWidth: 2,
+                        spanGaps: true
                     });
-                    colorIdx++;
                 }
+            }
+
+            if (datasets.length === 0) {
+                document.getElementById('dailyChartContainer').innerHTML = 
+                    '<div style="text-align:center;color:#94a3b8;padding:40px;">멤버를 선택하세요</div>';
+                return;
             }
 
             dailyChartInstance = new Chart(ctx, {
@@ -1152,14 +1254,7 @@
                         intersect: false
                     },
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 15,
-                                font: { size: 11 }
-                            }
-                        },
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.raw)} 걸음`
