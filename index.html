@@ -428,7 +428,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
-            margin-bottom: 30px;
         }
 
         .chart-box {
@@ -436,8 +435,6 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            height: 350px;
-            overflow: hidden;
         }
 
         .chart-title {
@@ -445,11 +442,6 @@
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 16px;
-        }
-
-        .chart-wrapper {
-            height: 280px;
-            position: relative;
         }
 
         /* 모달 */
@@ -762,34 +754,74 @@
                         <input type="text" class="search-input" id="searchInput" 
                                placeholder="이름으로 검색..." oninput="filterAllRanking()">
                     </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th class="rank-cell">순위</th>
-                                <th>이름</th>
-                                <th>소속</th>
-                                <th class="steps-cell">일평균</th>
-                                <th style="text-align:right;">보/일</th>
-                            </tr>
-                        </thead>
-                        <tbody id="allRankingBody"></tbody>
-                    </table>
+                    <div style="max-height:500px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+                        <table class="data-table">
+                            <thead style="position:sticky;top:0;z-index:1;">
+                                <tr>
+                                    <th class="rank-cell">순위</th>
+                                    <th>이름</th>
+                                    <th>소속</th>
+                                    <th class="steps-cell">일평균</th>
+                                    <th style="text-align:right;">보/일</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allRankingBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 차트 섹션 -->
-        <div class="chart-grid">
-            <div class="chart-box">
-                <div class="chart-title">📈 그룹별 일평균 비교</div>
-                <div class="chart-wrapper">
-                    <canvas id="groupChart"></canvas>
+        <!-- 통계 섹션 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">📊 통계</div>
+                <div class="tabs">
+                    <button class="tab active" data-stat="all" onclick="switchStatTab('all')">전체</button>
+                    <button class="tab" data-stat="group" onclick="switchStatTab('group')">그룹별</button>
+                    <button class="tab" data-stat="team" onclick="switchStatTab('team')">팀별</button>
                 </div>
             </div>
-            <div class="chart-box">
-                <div class="chart-title">📊 걸음수 분포</div>
-                <div class="chart-wrapper">
-                    <canvas id="distributionChart"></canvas>
+            <div class="section-body">
+                <!-- 전체 통계 -->
+                <div id="statAll">
+                    <div class="chart-grid">
+                        <div class="chart-box">
+                            <div class="chart-title">📈 그룹별 일평균 비교</div>
+                            <canvas id="groupChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <div class="chart-title">📊 걸음수 분포 (전체)</div>
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 그룹별 통계 -->
+                <div id="statGroup" style="display:none;">
+                    <div style="margin-bottom:16px;">
+                        <select id="groupSelect" class="search-input" style="width:auto;min-width:200px;" onchange="renderGroupStat()">
+                            <option value="">그룹 선택</option>
+                        </select>
+                    </div>
+                    <div id="groupStatContent">
+                        <div style="text-align:center;color:#94a3b8;padding:40px;">그룹을 선택하세요</div>
+                    </div>
+                </div>
+
+                <!-- 팀별 통계 -->
+                <div id="statTeam" style="display:none;">
+                    <div style="margin-bottom:16px;display:flex;gap:12px;">
+                        <select id="teamGroupSelect" class="search-input" style="width:auto;min-width:200px;" onchange="updateTeamSelect()">
+                            <option value="">그룹 선택</option>
+                        </select>
+                        <select id="teamSelect" class="search-input" style="width:auto;min-width:200px;" onchange="renderTeamStat()">
+                            <option value="">팀 선택</option>
+                        </select>
+                    </div>
+                    <div id="teamStatContent">
+                        <div style="text-align:center;color:#94a3b8;padding:40px;">팀을 선택하세요</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1117,8 +1149,15 @@
         function renderCharts() {
             const groupStats = getGroupStats();
             
+            // 그룹이 없으면 차트 안 그림
+            if (groupStats.length === 0) {
+                document.getElementById('groupChart').parentElement.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">그룹 데이터 없음</div>';
+                document.getElementById('distributionChart').parentElement.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">데이터 없음</div>';
+                return;
+            }
+
             // 그룹 비교 차트
-            const groupCtx = document.getElementById('groupChart').getContext('2d');
+            const groupCtx = document.getElementById('groupChart');
             if (groupChartInstance) groupChartInstance.destroy();
             
             groupChartInstance = new Chart(groupCtx, {
@@ -1139,7 +1178,8 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
                     plugins: {
                         legend: { display: false }
                     },
@@ -1177,7 +1217,7 @@
                 avgData.filter(v => v >= r.min && v < r.max).length
             );
 
-            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            const distCtx = document.getElementById('distributionChart');
             if (distChartInstance) distChartInstance.destroy();
 
             distChartInstance = new Chart(distCtx, {
@@ -1191,7 +1231,8 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
                     plugins: {
                         legend: {
                             position: 'right',
@@ -1348,6 +1389,223 @@
 
         function formatNumber(n) {
             return n.toLocaleString('ko-KR');
+        }
+
+        // 통계 탭 전환
+        function switchStatTab(tab) {
+            document.querySelectorAll('[data-stat]').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-stat="${tab}"]`).classList.add('active');
+            
+            document.getElementById('statAll').style.display = tab === 'all' ? 'block' : 'none';
+            document.getElementById('statGroup').style.display = tab === 'group' ? 'block' : 'none';
+            document.getElementById('statTeam').style.display = tab === 'team' ? 'block' : 'none';
+
+            if (tab === 'group') {
+                populateGroupSelect();
+            } else if (tab === 'team') {
+                populateTeamGroupSelect();
+            }
+        }
+
+        // 그룹 선택 목록 채우기
+        function populateGroupSelect() {
+            const select = document.getElementById('groupSelect');
+            select.innerHTML = '<option value="">그룹 선택</option>' + 
+                config.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        }
+
+        // 팀 탭의 그룹 선택 목록 채우기
+        function populateTeamGroupSelect() {
+            const select = document.getElementById('teamGroupSelect');
+            select.innerHTML = '<option value="">그룹 선택</option>' + 
+                config.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            document.getElementById('teamSelect').innerHTML = '<option value="">팀 선택</option>';
+        }
+
+        // 팀 선택 목록 업데이트
+        function updateTeamSelect() {
+            const groupId = document.getElementById('teamGroupSelect').value;
+            const teamSelect = document.getElementById('teamSelect');
+            
+            if (!groupId) {
+                teamSelect.innerHTML = '<option value="">팀 선택</option>';
+                return;
+            }
+
+            const group = config.groups.find(g => g.id === groupId);
+            teamSelect.innerHTML = '<option value="">팀 선택</option>' + 
+                (group?.teams || []).map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+
+        // 그룹 통계 렌더링
+        let groupStatChart = null;
+        function renderGroupStat() {
+            const groupId = document.getElementById('groupSelect').value;
+            const container = document.getElementById('groupStatContent');
+            
+            if (!groupId) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">그룹을 선택하세요</div>';
+                return;
+            }
+
+            const group = config.groups.find(g => g.id === groupId);
+            const today = new Date();
+            const dayOfMonth = today.getDate();
+
+            // 팀별 통계
+            const teamStats = (group.teams || []).map(team => {
+                let teamSteps = 0;
+                let memberCount = 0;
+                (team.members || []).forEach(name => {
+                    const data = getMemberData(name);
+                    teamSteps += parseInt(data['월누적']) || 0;
+                    memberCount++;
+                });
+                const avgDaily = memberCount > 0 ? Math.floor(teamSteps / memberCount / dayOfMonth) : 0;
+                return { name: team.name, avgDaily, memberCount, totalSteps: teamSteps };
+            }).sort((a, b) => b.avgDaily - a.avgDaily);
+
+            const groupTotal = teamStats.reduce((sum, t) => sum + t.totalSteps, 0);
+            const groupMembers = teamStats.reduce((sum, t) => sum + t.memberCount, 0);
+            const groupAvg = groupMembers > 0 ? Math.floor(groupTotal / groupMembers / dayOfMonth) : 0;
+
+            container.innerHTML = `
+                <div class="summary-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+                    <div class="summary-card">
+                        <div class="summary-label">그룹 일평균</div>
+                        <div class="summary-value">${formatNumber(groupAvg)}</div>
+                        <div class="summary-sub">보/일</div>
+                    </div>
+                    <div class="summary-card gold">
+                        <div class="summary-label">총 인원</div>
+                        <div class="summary-value">${groupMembers}</div>
+                        <div class="summary-sub">명</div>
+                    </div>
+                    <div class="summary-card green">
+                        <div class="summary-label">팀 수</div>
+                        <div class="summary-value">${teamStats.length}</div>
+                        <div class="summary-sub">팀</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">📊 ${group.name} 팀별 일평균</div>
+                    <canvas id="groupStatChart"></canvas>
+                </div>
+            `;
+
+            // 차트 그리기
+            if (groupStatChart) groupStatChart.destroy();
+            groupStatChart = new Chart(document.getElementById('groupStatChart'), {
+                type: 'bar',
+                data: {
+                    labels: teamStats.map(t => t.name),
+                    datasets: [{
+                        label: '일평균 (보/일)',
+                        data: teamStats.map(t => t.avgDaily),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 팀 통계 렌더링
+        let teamStatChart = null;
+        function renderTeamStat() {
+            const groupId = document.getElementById('teamGroupSelect').value;
+            const teamId = document.getElementById('teamSelect').value;
+            const container = document.getElementById('teamStatContent');
+            
+            if (!groupId || !teamId) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;">팀을 선택하세요</div>';
+                return;
+            }
+
+            const group = config.groups.find(g => g.id === groupId);
+            const team = group?.teams?.find(t => t.id === teamId);
+            const today = new Date();
+            const dayOfMonth = today.getDate();
+
+            // 멤버별 통계
+            const memberStats = (team.members || []).map(name => {
+                const data = getMemberData(name);
+                const monthlyTotal = parseInt(data['월누적']) || 0;
+                const avgDaily = Math.floor(monthlyTotal / dayOfMonth);
+                return { name, avgDaily, total: monthlyTotal };
+            }).sort((a, b) => b.avgDaily - a.avgDaily);
+
+            const teamTotal = memberStats.reduce((sum, m) => sum + m.total, 0);
+            const teamAvg = memberStats.length > 0 ? Math.floor(teamTotal / memberStats.length / dayOfMonth) : 0;
+            const maxMember = memberStats[0] || { name: '-', avgDaily: 0 };
+            const minMember = memberStats[memberStats.length - 1] || { name: '-', avgDaily: 0 };
+
+            container.innerHTML = `
+                <div class="summary-grid" style="margin-bottom:20px;">
+                    <div class="summary-card">
+                        <div class="summary-label">팀 일평균</div>
+                        <div class="summary-value">${formatNumber(teamAvg)}</div>
+                        <div class="summary-sub">보/일</div>
+                    </div>
+                    <div class="summary-card gold">
+                        <div class="summary-label">팀 인원</div>
+                        <div class="summary-value">${memberStats.length}</div>
+                        <div class="summary-sub">명</div>
+                    </div>
+                    <div class="summary-card green">
+                        <div class="summary-label">1위</div>
+                        <div class="summary-value">${maxMember.name}</div>
+                        <div class="summary-sub">${formatNumber(maxMember.avgDaily)} 보/일</div>
+                    </div>
+                    <div class="summary-card purple">
+                        <div class="summary-label">최저</div>
+                        <div class="summary-value">${minMember.name}</div>
+                        <div class="summary-sub">${formatNumber(minMember.avgDaily)} 보/일</div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">📊 ${team.name} 멤버별 일평균</div>
+                    <canvas id="teamStatChart"></canvas>
+                </div>
+            `;
+
+            // 차트 그리기
+            if (teamStatChart) teamStatChart.destroy();
+            teamStatChart = new Chart(document.getElementById('teamStatChart'), {
+                type: 'bar',
+                data: {
+                    labels: memberStats.map(m => m.name),
+                    datasets: [{
+                        label: '일평균 (보/일)',
+                        data: memberStats.map(m => m.avgDaily),
+                        backgroundColor: memberStats.map((m, i) => {
+                            if (i === 0) return '#f59e0b';
+                            if (i === memberStats.length - 1) return '#ef4444';
+                            return '#3b82f6';
+                        }),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
         }
     </script>
 </body>
