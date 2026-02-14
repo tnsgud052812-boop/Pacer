@@ -926,20 +926,40 @@
             return latestData.find(d => d['이름'] === name) || {};
         }
 
+        // 등록된 멤버 목록 가져오기
+        function getRegisteredMembers() {
+            const members = new Set();
+            config.groups.forEach(g => {
+                (g.teams || []).forEach(t => {
+                    (t.members || []).forEach(m => members.add(m));
+                });
+            });
+            return members;
+        }
+
+        // 등록된 멤버 데이터만 가져오기
+        function getRegisteredMemberData() {
+            const registered = getRegisteredMembers();
+            return latestData.filter(d => registered.has(d['이름']));
+        }
+
         // 요약 렌더링
         function renderSummary() {
             const today = new Date();
             const dayOfMonth = today.getDate();
             
             document.getElementById('dayOfMonth').textContent = dayOfMonth;
-            document.getElementById('totalMembers').textContent = latestData.length;
+            
+            // 등록된 멤버만 대상
+            const registeredData = getRegisteredMemberData();
+            document.getElementById('totalMembers').textContent = registeredData.length;
 
-            // 전체 일평균
+            // 전체 일평균 (등록된 멤버만)
             let totalSteps = 0;
-            latestData.forEach(d => {
+            registeredData.forEach(d => {
                 totalSteps += parseInt(d['월누적']) || 0;
             });
-            const totalAvg = latestData.length > 0 ? Math.floor(totalSteps / latestData.length / dayOfMonth) : 0;
+            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayOfMonth) : 0;
             document.getElementById('totalAvg').textContent = formatNumber(totalAvg);
 
             // 1위 그룹
@@ -1081,11 +1101,14 @@
             el.classList.toggle('expanded');
         }
 
-        // 전체 랭킹 렌더링
+        // 전체 랭킹 렌더링 (등록된 멤버만)
         function renderAllRanking(filter = '') {
             const tbody = document.getElementById('allRankingBody');
             const today = new Date();
             const dayOfMonth = today.getDate();
+            
+            // 등록된 멤버만 대상
+            const registeredData = getRegisteredMemberData();
             
             // 멤버별 소속 정보 매핑
             const memberTeamMap = {};
@@ -1098,7 +1121,7 @@
             });
 
             // 일평균 기준 정렬
-            let sortedData = latestData.map(d => {
+            let sortedData = registeredData.map(d => {
                 const monthlyTotal = parseInt(d['월누적']) || 0;
                 const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
                 return { ...d, dailyAvg };
@@ -1145,7 +1168,7 @@
             renderAllRanking(query);
         }
 
-        // 차트 렌더링
+        // 차트 렌더링 (등록된 멤버만)
         function renderCharts() {
             const groupStats = getGroupStats();
             
@@ -1195,11 +1218,12 @@
                 }
             });
 
-            // 분포 차트
+            // 분포 차트 (등록된 멤버만)
             const today = new Date();
             const dayOfMonth = today.getDate();
             
-            const avgData = latestData.map(d => {
+            const registeredData = getRegisteredMemberData();
+            const avgData = registeredData.map(d => {
                 const total = parseInt(d['월누적']) || 0;
                 return Math.floor(total / dayOfMonth);
             });
