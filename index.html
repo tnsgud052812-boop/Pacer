@@ -682,7 +682,7 @@
         <!-- 일별 추이 그래프 -->
         <div class="section">
             <div class="section-header">
-                <div class="section-title">📈 일별 총 걸음수 추이</div>
+                <div class="section-title">📈 멤버별 월누적 추이</div>
             </div>
             <div class="section-body">
                 <div id="dailyChartContainer">
@@ -838,37 +838,44 @@
             try {
                 const now = new Date();
                 const monthFolder = `${now.getFullYear()}년${now.getMonth() + 1}월`;
+                const registered = getRegisteredMembers();
                 
-                // 이번 달 일별 데이터 로드 (최근 14일)
-                dailyHistory = [];
+                // 멤버별 일별 누적 데이터
+                const memberHistory = {};
+                registered.forEach(name => {
+                    memberHistory[name] = [];
+                });
+                
+                const dates = [];
+                
                 for (let i = 1; i <= now.getDate(); i++) {
                     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                    const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/daily/${monthFolder}/${dateStr}.csv`;
+                    const dateLabel = `${now.getMonth() + 1}/${i}`;
                     
                     try {
+                        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/daily/${monthFolder}/${dateStr}.csv`;
                         const res = await fetch(url);
+                        
                         if (res.ok) {
                             const csv = await res.text();
                             const data = parseCSV(csv);
                             
-                            // 등록된 멤버의 총 걸음수 합계
-                            const registered = getRegisteredMembers();
-                            let totalDaily = 0;
-                            data.forEach(d => {
-                                if (registered.has(d['이름'])) {
-                                    totalDaily += parseInt(d['오늘걸음수']) || 0;
-                                }
-                            });
+                            dates.push(dateLabel);
                             
-                            dailyHistory.push({
-                                date: `${now.getMonth() + 1}/${i}`,
-                                total: totalDaily
+                            // 각 멤버의 월누적 기록
+                            registered.forEach(name => {
+                                const row = data.find(d => d['이름'] === name);
+                                const monthly = row ? (parseInt(row['월간누적']) || parseInt(row['월누적']) || 0) : null;
+                                memberHistory[name].push(monthly);
                             });
                         }
                     } catch (e) {}
                 }
+                
+                dailyHistory = { dates, memberHistory };
             } catch (e) {
                 console.error('일별 데이터 로드 실패:', e);
+                dailyHistory = { dates: [], memberHistory: {} };
             }
         }
 
@@ -1088,7 +1095,7 @@
         }
 
         function renderDailyChart() {
-            if (dailyHistory.length === 0) {
+            if (!dailyHistory.dates || dailyHistory.dates.length === 0) {
                 document.getElementById('dailyChartContainer').innerHTML = 
                     '<div style="text-align:center;color:#94a3b8;padding:40px;">일별 데이터 없음</div>';
                 return;
@@ -1097,30 +1104,61 @@
             const ctx = document.getElementById('dailyChart');
             if (dailyChartInstance) dailyChartInstance.destroy();
 
+            // 색상 팔레트
+            const colors = [
+                '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+                '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+                '#14b8a6', '#e11d48', '#0ea5e9', '#22c55e', '#a855f7',
+                '#f43f5e', '#0891b2', '#65a30d', '#ea580c', '#7c3aed'
+            ];
+
+            // 데이터셋 생성
+            const datasets = [];
+            let colorIdx = 0;
+            
+            for (const [name, data] of Object.entries(dailyHistory.memberHistory)) {
+                // null이 아닌 데이터가 있는 멤버만
+                if (data.some(v => v !== null)) {
+                    datasets.push({
+                        label: name,
+                        data: data,
+                        borderColor: colors[colorIdx % colors.length],
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    });
+                    colorIdx++;
+                }
+            }
+
             dailyChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: dailyHistory.map(d => d.date),
-                    datasets: [{
-                        label: '전체 걸음수',
-                        data: dailyHistory.map(d => d.total),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#3b82f6'
-                    }]
+                    labels: dailyHistory.dates,
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    aspectRatio: 3,
+                    aspectRatio: 2.5,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => `${formatNumber(ctx.raw)} 걸음`
+                                label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.raw)} 걸음`
                             }
                         }
                     },
