@@ -786,7 +786,11 @@
         document.addEventListener('DOMContentLoaded', loadAllData);
 
         async function loadAllData() {
-            await Promise.all([loadConfig(), loadLatestData(), loadDailyHistory()]);
+            // 순서 중요: config 먼저, 그 다음 latest, 마지막에 dailyHistory
+            await loadConfig();
+            await loadLatestData();
+            await loadDailyHistory();
+            
             renderSummary();
             renderTeamRankings();
             renderAllRanking();
