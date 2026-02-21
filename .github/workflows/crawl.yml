@@ -1,7 +1,7 @@
 name: Pacer 일별 크롤링
 
 on:
-  # 매일 23:59 KST (= 14:59 UTC)
+  # 매일 22:00 KST (= 13:00 UTC)
   schedule:
     - cron: '00 13 * * *'
   
