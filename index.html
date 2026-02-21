@@ -1175,25 +1175,51 @@
         }
 
         function getTeamStats() {
-            const start = selectedStartDate || new Date();
-            const end = selectedEndDate || new Date();
-            const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            if (!dailyHistory.dates || dailyHistory.dates.length === 0) {
+                return [];
+            }
 
             return (config.teams || []).map(team => {
-                let totalSteps = 0;
+                let teamDailyAvgSum = 0;
                 let memberCount = 0;
 
                 (team.members || []).forEach(name => {
-                    const data = getMemberData(name);
-                    totalSteps += parseInt(data['월누적']) || 0;
-                    memberCount++;
+                    const data = dailyHistory.memberHistory[name];
+                    if (!data) return;
+                    
+                    // 일일 걸음수 계산
+                    let memberDailySum = 0;
+                    let memberDays = 0;
+                    
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i] !== null) {
+                            let dailySteps = 0;
+                            if (i === 0) {
+                                dailySteps = data[i];
+                            } else if (data[i - 1] !== null) {
+                                dailySteps = data[i] - data[i - 1];
+                                if (dailySteps < 0) dailySteps = data[i];
+                            } else {
+                                dailySteps = data[i];
+                            }
+                            
+                            if (dailySteps > 0) {
+                                memberDailySum += dailySteps;
+                                memberDays++;
+                            }
+                        }
+                    }
+                    
+                    if (memberDays > 0) {
+                        teamDailyAvgSum += memberDailySum / memberDays;
+                        memberCount++;
+                    }
                 });
 
-                const avgDaily = memberCount > 0 ? Math.floor(totalSteps / memberCount / dayCount) : 0;
+                const avgDaily = memberCount > 0 ? Math.floor(teamDailyAvgSum / memberCount) : 0;
 
                 return {
                     ...team,
-                    totalSteps,
                     avgDaily,
                     memberCount
                 };
@@ -1201,25 +1227,66 @@
         }
 
         function renderSummary() {
-            const start = selectedStartDate || new Date();
-            const end = selectedEndDate || new Date();
-            const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-            
             const registeredData = getRegisteredMemberData();
             document.getElementById('totalMembers').textContent = registeredData.length;
 
-            let totalSteps = 0;
-            registeredData.forEach(d => {
-                totalSteps += parseInt(d['월누적']) || 0;
-            });
-            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayCount) : 0;
-            document.getElementById('totalAvg').textContent = formatNumber(totalAvg);
+            // 일일 걸음수 기반 통계 계산
+            const stats = calculateDailyStats();
+            document.getElementById('totalAvg').textContent = formatNumber(stats.totalAvg);
 
             const teamStats = getTeamStats();
             if (teamStats.length > 0) {
                 document.getElementById('topTeam').textContent = teamStats[0].name;
                 document.getElementById('topTeamAvg').textContent = formatNumber(teamStats[0].avgDaily) + ' 보/일';
             }
+        }
+
+        // 일일 걸음수 기반 통계 계산
+        function calculateDailyStats() {
+            if (!dailyHistory.dates || dailyHistory.dates.length === 0) {
+                return { totalAvg: 0 };
+            }
+
+            const registered = getRegisteredMembers();
+            let totalDailySum = 0;
+            let totalDays = 0;
+            let memberCount = 0;
+
+            for (const [name, data] of Object.entries(dailyHistory.memberHistory)) {
+                if (!registered.has(name)) continue;
+                
+                // 일일 걸음수 계산 (누적의 차이)
+                let memberDailySum = 0;
+                let memberDays = 0;
+                
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i] !== null) {
+                        let dailySteps = 0;
+                        if (i === 0) {
+                            // 첫날은 그 값 자체가 일일 걸음수 (또는 이전 데이터 없으면)
+                            dailySteps = data[i];
+                        } else if (data[i - 1] !== null) {
+                            dailySteps = data[i] - data[i - 1];
+                            if (dailySteps < 0) dailySteps = data[i]; // 월초 리셋
+                        } else {
+                            dailySteps = data[i];
+                        }
+                        
+                        if (dailySteps > 0) {
+                            memberDailySum += dailySteps;
+                            memberDays++;
+                        }
+                    }
+                }
+                
+                if (memberDays > 0) {
+                    totalDailySum += memberDailySum / memberDays; // 멤버별 일평균
+                    memberCount++;
+                }
+            }
+
+            const totalAvg = memberCount > 0 ? Math.floor(totalDailySum / memberCount) : 0;
+            return { totalAvg };
         }
 
         function renderTeamRankings() {
@@ -1236,9 +1303,6 @@
                 return;
             }
 
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-
             container.innerHTML = teamStats.map((team, idx) => {
                 const rank = idx + 1;
                 let rankClass = 'default';
@@ -1246,11 +1310,37 @@
                 else if (rank === 2) rankClass = 'silver';
                 else if (rank === 3) rankClass = 'bronze';
 
+                // 멤버별 일평균 계산
                 const memberStats = (team.members || []).map(name => {
-                    const data = getMemberData(name);
-                    const monthlyTotal = parseInt(data['월누적']) || 0;
-                    const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
-                    return { name, dailyAvg, total: monthlyTotal };
+                    const data = dailyHistory.memberHistory[name];
+                    if (!data) return { name, dailyAvg: 0, total: 0 };
+                    
+                    let memberDailySum = 0;
+                    let memberDays = 0;
+                    let lastTotal = 0;
+                    
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i] !== null) {
+                            lastTotal = data[i];
+                            let dailySteps = 0;
+                            if (i === 0) {
+                                dailySteps = data[i];
+                            } else if (data[i - 1] !== null) {
+                                dailySteps = data[i] - data[i - 1];
+                                if (dailySteps < 0) dailySteps = data[i];
+                            } else {
+                                dailySteps = data[i];
+                            }
+                            
+                            if (dailySteps > 0) {
+                                memberDailySum += dailySteps;
+                                memberDays++;
+                            }
+                        }
+                    }
+                    
+                    const dailyAvg = memberDays > 0 ? Math.floor(memberDailySum / memberDays) : 0;
+                    return { name, dailyAvg, total: lastTotal };
                 }).sort((a, b) => b.dailyAvg - a.dailyAvg);
 
                 return `
@@ -1289,10 +1379,13 @@
 
         function renderAllRanking(filter = '') {
             const tbody = document.getElementById('allRankingBody');
-            const today = new Date();
-            const dayOfMonth = today.getDate();
             
-            const registeredData = getRegisteredMemberData();
+            if (!dailyHistory.dates || dailyHistory.dates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:40px;">데이터 없음</td></tr>';
+                return;
+            }
+            
+            const registered = getRegisteredMembers();
             
             const memberTeamMap = {};
             (config.teams || []).forEach(t => {
@@ -1301,16 +1394,46 @@
                 });
             });
 
-            let sortedData = registeredData.map(d => {
-                const monthlyTotal = parseInt(d['월누적']) || 0;
-                const dailyAvg = Math.floor(monthlyTotal / dayOfMonth);
-                return { ...d, dailyAvg };
-            }).sort((a, b) => b.dailyAvg - a.dailyAvg);
+            // 일평균 기준 정렬
+            let sortedData = [];
+            
+            for (const [name, data] of Object.entries(dailyHistory.memberHistory)) {
+                if (!registered.has(name)) continue;
+                
+                let memberDailySum = 0;
+                let memberDays = 0;
+                let lastTotal = 0;
+                
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i] !== null) {
+                        lastTotal = data[i];
+                        let dailySteps = 0;
+                        if (i === 0) {
+                            dailySteps = data[i];
+                        } else if (data[i - 1] !== null) {
+                            dailySteps = data[i] - data[i - 1];
+                            if (dailySteps < 0) dailySteps = data[i];
+                        } else {
+                            dailySteps = data[i];
+                        }
+                        
+                        if (dailySteps > 0) {
+                            memberDailySum += dailySteps;
+                            memberDays++;
+                        }
+                    }
+                }
+                
+                const dailyAvg = memberDays > 0 ? Math.floor(memberDailySum / memberDays) : 0;
+                sortedData.push({ name, dailyAvg, total: lastTotal });
+            }
+            
+            sortedData.sort((a, b) => b.dailyAvg - a.dailyAvg);
 
             const maxAvg = sortedData.length > 0 ? sortedData[0].dailyAvg : 1;
 
             const filtered = filter 
-                ? sortedData.filter(d => d['이름'].toLowerCase().includes(filter.toLowerCase()))
+                ? sortedData.filter(d => d.name.toLowerCase().includes(filter.toLowerCase()))
                 : sortedData;
 
             tbody.innerHTML = filtered.map((row, idx) => {
@@ -1320,13 +1443,13 @@
                 else if (rank === 2) rankClass = 'rank-2';
                 else if (rank === 3) rankClass = 'rank-3';
 
-                const team = memberTeamMap[row['이름']] || '-';
+                const team = memberTeamMap[row.name] || '-';
                 const barWidth = (row.dailyAvg / maxAvg * 100).toFixed(1);
 
                 return `
-                    <tr onclick="showMemberDetail('${row['이름']}')">
+                    <tr onclick="showMemberDetail('${row.name}')">
                         <td class="rank-cell"><span class="rank-badge ${rankClass}">${rank}</span></td>
-                        <td><strong>${row['이름']}</strong></td>
+                        <td><strong>${row.name}</strong></td>
                         <td style="color:#64748b;font-size:0.8rem;">${team}</td>
                         <td class="steps-cell">
                             <div class="steps-bar-container">
