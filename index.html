@@ -76,7 +76,75 @@
             padding: 30px 20px;
         }
 
-        /* 요약 카드 */
+        /* 요약 리스트 */
+        .summary-list {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row-label {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .summary-row-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-right: 8px;
+        }
+
+        .summary-row-unit {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            min-width: 60px;
+        }
+
+        /* 기간 선택 */
+        .period-select, .period-input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: #fff;
+            color: #1e293b;
+        }
+
+        .period-select:focus, .period-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .period-btn:hover {
+            background: #2563eb;
+        }
+
+        /* 요약 카드 (기존 - 삭제 예정이지만 호환용) */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -682,34 +750,48 @@
         <div class="header-right">
             <div class="header-date" id="updateTime">데이터 로딩 중...</div>
             <div class="header-buttons">
-                <button onclick="location.reload(true)" class="header-btn">🔄 새로고침</button>
                 <a href="admin.html" class="header-btn">⚙️ 관리자</a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <!-- 요약 카드 -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-label">참여 인원</div>
-                <div class="summary-value" id="totalMembers">-</div>
-                <div class="summary-sub">명</div>
+        <!-- 경고 문구 -->
+        <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.2rem;">⚠️</span>
+            <span style="color:#92400e;font-size:0.85rem;">Pacer 앱 동기화가 늦어지면 통계값이 달라질 수 있습니다. 정확한 집계를 위해 매일 앱을 실행해주세요.</span>
+        </div>
+
+        <!-- 기간 선택 -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-body" style="padding:16px 24px;">
+                <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                    <span style="font-weight:600;color:#1e293b;">📅 집계 기간</span>
+                    <select id="monthSelect" class="period-select" onchange="onPeriodChange()"></select>
+                    <input type="date" id="startDate" class="period-input" onchange="onPeriodChange()">
+                    <span style="color:#64748b;">~</span>
+                    <input type="date" id="endDate" class="period-input" onchange="onPeriodChange()">
+                    <button class="period-btn" onclick="resetToCurrentMonth()">이번달</button>
+                </div>
             </div>
-            <div class="summary-card gold">
-                <div class="summary-label">전체 일평균</div>
-                <div class="summary-value" id="totalAvg">-</div>
-                <div class="summary-sub">보/일</div>
+        </div>
+
+        <!-- 요약 리스트 -->
+        <div class="summary-list">
+            <div class="summary-row">
+                <span class="summary-row-label">👥 참여 인원</span>
+                <span class="summary-row-value" id="totalMembers">-</span>
+                <span class="summary-row-unit">명</span>
             </div>
-            <div class="summary-card green">
-                <div class="summary-label">1위 팀</div>
-                <div class="summary-value" id="topTeam">-</div>
-                <div class="summary-sub" id="topTeamAvg"></div>
+            <div class="summary-row">
+                <span class="summary-row-label">🚶 전체 일평균</span>
+                <span class="summary-row-value" id="totalAvg">-</span>
+                <span class="summary-row-unit">보/일</span>
             </div>
-            <div class="summary-card purple">
-                <div class="summary-label">이번달 경과</div>
-                <div class="summary-value" id="dayOfMonth">-</div>
-                <div class="summary-sub">일</div>
+            <div class="summary-row">
+                <span class="summary-row-label">🏆 1위 팀</span>
+                <span class="summary-row-value" id="topTeam">-</span>
+                <span class="summary-row-unit" id="topTeamAvg"></span>
             </div>
         </div>
 
@@ -821,6 +903,11 @@
         let teamChartInstance = null;
         let distChartInstance = null;
         let dailyChartInstance = null;
+        
+        // 기간 선택 관련
+        let availableMonths = []; // 사용 가능한 월 목록
+        let selectedStartDate = null;
+        let selectedEndDate = null;
 
         document.addEventListener('DOMContentLoaded', loadAllData);
 
@@ -828,6 +915,8 @@
             // 순서 중요: config 먼저, 그 다음 latest, 마지막에 dailyHistory
             await loadConfig();
             await loadLatestData();
+            await loadAvailableMonths();
+            initPeriodSelector();
             await loadDailyHistory();
             
             renderSummary();
@@ -836,6 +925,123 @@
             renderCharts();
             renderMemberCheckboxes();
             renderDailyChart();
+        }
+
+        async function loadAvailableMonths() {
+            // data/daily 폴더에서 사용 가능한 월 목록 가져오기
+            try {
+                const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/daily`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    availableMonths = data
+                        .filter(d => d.type === 'dir')
+                        .map(d => d.name)
+                        .sort()
+                        .reverse(); // 최신 월이 먼저
+                }
+            } catch (e) {
+                console.error('월 목록 로드 실패:', e);
+            }
+        }
+
+        function initPeriodSelector() {
+            const monthSelect = document.getElementById('monthSelect');
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            
+            // 월 선택 옵션 생성
+            monthSelect.innerHTML = availableMonths.map(m => 
+                `<option value="${m}">${m}</option>`
+            ).join('');
+            
+            // 기본값: 이번달
+            const today = new Date();
+            const currentMonth = `${today.getFullYear()}년${today.getMonth() + 1}월`;
+            
+            if (availableMonths.includes(currentMonth)) {
+                monthSelect.value = currentMonth;
+            }
+            
+            // 날짜 범위 설정
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            startInput.value = formatDateInput(firstDay);
+            endInput.value = formatDateInput(today);
+            startInput.min = formatDateInput(firstDay);
+            startInput.max = formatDateInput(today);
+            endInput.min = formatDateInput(firstDay);
+            endInput.max = formatDateInput(today);
+            
+            selectedStartDate = firstDay;
+            selectedEndDate = today;
+        }
+
+        function formatDateInput(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function onPeriodChange() {
+            const monthSelect = document.getElementById('monthSelect');
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            
+            // 월 변경 시 날짜 범위 업데이트
+            const monthStr = monthSelect.value;
+            const match = monthStr.match(/(\d+)년(\d+)월/);
+            if (match) {
+                const year = parseInt(match[1]);
+                const month = parseInt(match[2]) - 1;
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const today = new Date();
+                
+                // 이번달이면 오늘까지, 아니면 말일까지
+                const maxDate = (year === today.getFullYear() && month === today.getMonth()) 
+                    ? today : lastDay;
+                
+                startInput.min = formatDateInput(firstDay);
+                startInput.max = formatDateInput(maxDate);
+                endInput.min = formatDateInput(firstDay);
+                endInput.max = formatDateInput(maxDate);
+                
+                // 날짜가 범위 밖이면 조정
+                if (new Date(startInput.value) < firstDay) {
+                    startInput.value = formatDateInput(firstDay);
+                }
+                if (new Date(endInput.value) > maxDate) {
+                    endInput.value = formatDateInput(maxDate);
+                }
+            }
+            
+            selectedStartDate = new Date(startInput.value);
+            selectedEndDate = new Date(endInput.value);
+            
+            // 데이터 다시 로드 및 렌더링
+            loadDailyHistory().then(() => {
+                renderSummary();
+                renderTeamRankings();
+                renderAllRanking();
+                renderCharts();
+                renderMemberCheckboxes();
+                renderDailyChart();
+            });
+        }
+
+        function resetToCurrentMonth() {
+            const today = new Date();
+            const currentMonth = `${today.getFullYear()}년${today.getMonth() + 1}월`;
+            
+            document.getElementById('monthSelect').value = currentMonth;
+            
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('startDate').value = formatDateInput(firstDay);
+            document.getElementById('endDate').value = formatDateInput(today);
+            
+            onPeriodChange();
         }
 
         async function loadConfig() {
@@ -880,8 +1086,8 @@
 
         async function loadDailyHistory() {
             try {
-                const now = new Date();
-                const monthFolder = `${now.getFullYear()}년${now.getMonth() + 1}월`;
+                const monthSelect = document.getElementById('monthSelect');
+                const monthFolder = monthSelect ? monthSelect.value : `${new Date().getFullYear()}년${new Date().getMonth() + 1}월`;
                 const registered = getRegisteredMembers();
                 
                 // 멤버별 일별 누적 데이터
@@ -892,9 +1098,13 @@
                 
                 const dates = [];
                 
-                for (let i = 1; i <= now.getDate(); i++) {
-                    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                    const dateLabel = `${now.getMonth() + 1}/${i}`;
+                // 선택된 기간의 날짜들
+                const start = selectedStartDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                const end = selectedEndDate || new Date();
+                
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = formatDateInput(new Date(d));
+                    const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`;
                     
                     try {
                         const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/daily/${monthFolder}/${dateStr}.csv`;
@@ -965,8 +1175,9 @@
         }
 
         function getTeamStats() {
-            const today = new Date();
-            const dayOfMonth = today.getDate();
+            const start = selectedStartDate || new Date();
+            const end = selectedEndDate || new Date();
+            const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
             return (config.teams || []).map(team => {
                 let totalSteps = 0;
@@ -978,7 +1189,7 @@
                     memberCount++;
                 });
 
-                const avgDaily = memberCount > 0 ? Math.floor(totalSteps / memberCount / dayOfMonth) : 0;
+                const avgDaily = memberCount > 0 ? Math.floor(totalSteps / memberCount / dayCount) : 0;
 
                 return {
                     ...team,
@@ -990,10 +1201,9 @@
         }
 
         function renderSummary() {
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-            
-            document.getElementById('dayOfMonth').textContent = dayOfMonth;
+            const start = selectedStartDate || new Date();
+            const end = selectedEndDate || new Date();
+            const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
             
             const registeredData = getRegisteredMemberData();
             document.getElementById('totalMembers').textContent = registeredData.length;
@@ -1002,7 +1212,7 @@
             registeredData.forEach(d => {
                 totalSteps += parseInt(d['월누적']) || 0;
             });
-            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayOfMonth) : 0;
+            const totalAvg = registeredData.length > 0 ? Math.floor(totalSteps / registeredData.length / dayCount) : 0;
             document.getElementById('totalAvg').textContent = formatNumber(totalAvg);
 
             const teamStats = getTeamStats();
