@@ -334,6 +334,12 @@
             gap: 12px;
         }
 
+        .display-grid {
+            display: grid;
+            grid-template-columns: minmax(240px, 1.5fr) minmax(180px, 1fr);
+            gap: 12px;
+        }
+
         .season-grid .form-group {
             margin-bottom: 0;
         }
@@ -354,7 +360,7 @@
         }
 
         @media (max-width: 760px) {
-            .season-grid {
+            .season-grid, .display-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -527,7 +533,7 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h1>🔐 관리자 로그인</h1>
-            <p class="subtitle">캔탑스 만보걷기 관리</p>
+            <p class="subtitle" id="adminLoginSubtitle">캔탑스 만보걷기 관리</p>
             <input type="text" class="login-input" id="loginId" placeholder="아이디" autocomplete="username">
             <input type="password" class="login-input" id="loginPw" placeholder="비밀번호"
                 autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
@@ -550,6 +556,29 @@
 
         <!-- 팀 관리 -->
         <div class="tab-content editor-disabled" id="teamsTab">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎨 메인 화면 설정</span>
+                </div>
+                <div class="display-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="siteTitleInput">사이트 이름</label>
+                        <input type="text" class="form-input" id="siteTitleInput"
+                            placeholder="예: 2026 사내 걷기 대항전" oninput="updateDisplaySettings()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="siteThemeSelect">화면 테마</label>
+                        <select class="form-select" id="siteThemeSelect" onchange="updateDisplaySettings()">
+                            <option value="dark">다크 모드</option>
+                            <option value="light">라이트 모드</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="season-validation" id="displayValidation">
+                    저장하면 메인 화면의 제목과 색상 테마가 변경됩니다.
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">📅 시즌 집계 기간</span>
@@ -719,6 +748,7 @@
                 hasChanges = false;
                 document.getElementById('saveBar').style.display = 'none';
                 syncAllMembers();
+                renderDisplaySettings();
                 renderSeasonSettings();
                 renderTeams();
                 setEditorEnabled(true);
@@ -808,6 +838,13 @@
             }
 
             const normalized = { ...data };
+            const display = data.display && typeof data.display === 'object' ? data.display : {};
+            const theme = String(display.theme ?? 'dark').trim().toLowerCase();
+            normalized.display = {
+                ...display,
+                title: String(display.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기',
+                theme: ['dark', 'light'].includes(theme) ? theme : 'dark'
+            };
             const season = data.season && typeof data.season === 'object' ? data.season : {};
             normalized.season = {
                 ...season,
@@ -843,6 +880,56 @@
             delete normalized.groups;
 
             return normalized;
+        }
+
+        function renderDisplaySettings() {
+            const display = config.display || {};
+            document.getElementById('siteTitleInput').value = display.title || '캔탑스 만보걷기';
+            document.getElementById('siteThemeSelect').value = display.theme || 'dark';
+            applyAdminDisplayLabels();
+            validateDisplaySettings(false);
+        }
+
+        function updateDisplaySettings() {
+            if (!configLoaded) return;
+            config.display = {
+                ...(config.display || {}),
+                title: document.getElementById('siteTitleInput').value.trim(),
+                theme: document.getElementById('siteThemeSelect').value
+            };
+            applyAdminDisplayLabels();
+            validateDisplaySettings(false);
+            markChanged();
+        }
+
+        function applyAdminDisplayLabels() {
+            const title = String(config.display?.title || '캔탑스 만보걷기').trim() || '캔탑스 만보걷기';
+            document.title = `관리자 - ${title}`;
+            document.getElementById('adminLoginSubtitle').textContent = `${title} 관리`;
+        }
+
+        function validateDisplaySettings(showErrorToast = false) {
+            const title = String(config.display?.title || '').trim();
+            const theme = String(config.display?.theme || '');
+            const validation = document.getElementById('displayValidation');
+            let valid = true;
+            let message = '저장하면 메인 화면의 제목과 색상 테마가 변경됩니다.';
+            let type = 'success';
+
+            if (!title) {
+                valid = false;
+                type = 'error';
+                message = '사이트 이름을 입력해야 합니다.';
+            } else if (!['dark', 'light'].includes(theme)) {
+                valid = false;
+                type = 'error';
+                message = '화면 테마를 다시 선택하세요.';
+            }
+
+            validation.textContent = message;
+            validation.className = `season-validation ${type}`.trim();
+            if (!valid && showErrorToast) showToast(message, 'error');
+            return valid;
         }
 
         function renderSeasonSettings() {
@@ -1159,7 +1246,7 @@
                 showToast('저장할 변경 내용이 없습니다.');
                 return;
             }
-            if (!validateSeasonSettings(true)) return;
+            if (!validateDisplaySettings(true) || !validateSeasonSettings(true)) return;
 
             const input = document.getElementById('githubToken');
             input.value = '';
@@ -1176,7 +1263,7 @@
         // GitHub의 현재 설정과 처음 읽은 설정이 같은 경우에만 저장한다.
         async function confirmSaveConfig() {
             if (saveInProgress || !configLoaded || !hasChanges) return;
-            if (!validateSeasonSettings(true)) return;
+            if (!validateDisplaySettings(true) || !validateSeasonSettings(true)) return;
 
             const tokenInput = document.getElementById('githubToken');
             const token = tokenInput.value.trim();
