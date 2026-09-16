@@ -18,79 +18,6 @@
             color: #eee;
         }
 
-        /* 로그인 화면 */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .login-overlay.hidden {
-            display: none;
-        }
-
-        .login-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .login-box h1 {
-            margin-bottom: 10px;
-            font-size: 1.5rem;
-        }
-
-        .login-box .subtitle {
-            color: #888;
-            margin-bottom: 30px;
-        }
-
-        .login-input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 1rem;
-            margin-bottom: 12px;
-        }
-
-        .login-input::placeholder {
-            color: #666;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: none;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .login-error {
-            color: #f87171;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            display: none;
-        }
-
         /* 메인 레이아웃 */
         .container {
             max-width: 1200px;
@@ -368,21 +295,6 @@
             height: 18px;
         }
 
-        /* 관리자 리스트 */
-        .admin-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
-
-        .admin-id {
-            font-weight: 600;
-        }
-
         /* 토스트 */
         .toast {
             position: fixed;
@@ -456,39 +368,55 @@
             padding: 40px;
             color: #666;
         }
+
+        .status-banner {
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .status-banner.success {
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #6ee7b7;
+        }
+
+        .status-banner.error {
+            border-color: rgba(248, 113, 113, 0.45);
+            color: #fca5a5;
+        }
+
+        .editor-disabled {
+            opacity: 0.45;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .token-help {
+            color: #999;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <!-- 로그인 화면 -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-box">
-            <h1>🔐 관리자 로그인</h1>
-            <p class="subtitle">캔탑스 만보걷기 관리</p>
-            <input type="text" class="login-input" id="loginId" placeholder="아이디">
-            <input type="password" class="login-input" id="loginPw" placeholder="비밀번호" onkeypress="if(event.key==='Enter')doLogin()">
-            <button class="login-btn" onclick="doLogin()">로그인</button>
-            <div class="login-error" id="loginError">아이디 또는 비밀번호가 틀렸습니다.</div>
-        </div>
-    </div>
-
     <!-- 메인 콘텐츠 -->
-    <div class="container content-wrapper" id="mainContent" style="display:none;">
+    <div class="container content-wrapper" id="mainContent">
         <div class="header">
             <h1>⚙️ 관리자 페이지</h1>
             <div class="header-btns">
                 <button class="btn" onclick="location.href='index.html'">📊 메인으로</button>
-                <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
             </div>
         </div>
 
-        <!-- 탭 -->
-        <div class="tabs">
-            <button class="tab active" data-tab="groups" onclick="switchTab('groups')">🏆 그룹/팀 관리</button>
-            <button class="tab" data-tab="admins" onclick="switchTab('admins')">👤 관리자 계정</button>
-        </div>
+        <div class="status-banner" id="configStatus">설정 파일을 불러오는 중입니다…</div>
 
-        <!-- 그룹/팀 관리 탭 -->
-        <div class="tab-content" id="groupsTab">
+        <!-- 그룹/팀 관리 -->
+        <div class="tab-content editor-disabled" id="groupsTab">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">📋 그룹 목록</span>
@@ -497,41 +425,11 @@
                 <div id="groupsList"></div>
             </div>
         </div>
-
-        <!-- 관리자 계정 탭 -->
-        <div class="tab-content" id="adminsTab" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">👤 관리자 계정</span>
-                    <button class="btn btn-primary" onclick="showAddAdminModal()">+ 계정 추가</button>
-                </div>
-                <div id="adminsList"></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">🔑 내 비밀번호 변경</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">현재 비밀번호</label>
-                    <input type="password" class="form-input" id="currentPw">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">새 비밀번호</label>
-                    <input type="password" class="form-input" id="newPw">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">새 비밀번호 확인</label>
-                    <input type="password" class="form-input" id="newPwConfirm">
-                </div>
-                <button class="btn btn-primary" onclick="changeMyPassword()">비밀번호 변경</button>
-            </div>
-        </div>
     </div>
 
     <!-- 저장 바 -->
     <div class="save-bar" id="saveBar" style="display:none;">
-        <button class="btn" onclick="loadConfig()">변경 취소</button>
+        <button class="btn" onclick="discardChanges()">변경 취소</button>
         <button class="btn btn-primary" onclick="saveConfig()">💾 GitHub에 저장</button>
     </div>
 
@@ -582,26 +480,28 @@
         </div>
     </div>
 
-    <!-- 관리자 추가 모달 -->
-    <div class="modal-overlay" id="adminModal">
+    <!-- GitHub 저장 인증 모달 -->
+    <div class="modal-overlay" id="tokenModal">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">관리자 추가</span>
-                <button class="modal-close" onclick="closeModal('adminModal')">&times;</button>
+                <span class="modal-title">🔐 GitHub 저장 인증</span>
+                <button class="modal-close" onclick="closeTokenModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">아이디</label>
-                    <input type="text" class="form-input" id="newAdminId" placeholder="아이디 입력">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">비밀번호</label>
-                    <input type="password" class="form-input" id="newAdminPw" placeholder="비밀번호 입력">
+                    <label class="form-label">GitHub Personal Access Token</label>
+                    <input type="password" class="form-input" id="githubToken"
+                        placeholder="github_pat_… 또는 ghp_…" autocomplete="off"
+                        onkeydown="if(event.key==='Enter')confirmSaveConfig()">
+                    <p class="token-help">
+                        저장할 때만 사용되며 브라우저에 보관하지 않습니다.<br>
+                        이 저장소의 Contents 읽기/쓰기 권한이 필요합니다.
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn" onclick="closeModal('adminModal')">취소</button>
-                <button class="btn btn-primary" onclick="addAdmin()">추가</button>
+                <button class="btn" onclick="closeTokenModal()">취소</button>
+                <button class="btn btn-primary" id="confirmSaveBtn" onclick="confirmSaveConfig()">저장</button>
             </div>
         </div>
     </div>
@@ -617,115 +517,185 @@
         const CONFIG_PATH = 'data/config.json';
 
         // 상태
-        let config = { admins: [], groups: [] };
+        let config = { groups: [] };
         let allMembers = [];
-        let currentUser = null;
+        let fetchedMembers = [];
         let editingGroupId = null;
         let editingTeamId = null;
         let editingGroupIdForTeam = null;
         let hasChanges = false;
+        let configLoaded = false;
+        let loadedConfigSnapshot = '';
+        let saveInProgress = false;
 
         // 초기화
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadAllMembers();
-            await loadConfig();
-            checkLogin();
+            await Promise.all([loadAllMembers(), loadConfig()]);
+            syncAllMembers();
+        });
+
+        window.addEventListener('beforeunload', event => {
+            if (!hasChanges) return;
+            event.preventDefault();
+            event.returnValue = '';
         });
 
         // 전체 멤버 로드 (latest.csv에서)
         async function loadAllMembers() {
             try {
-                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv`;
-                const response = await fetch(url);
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv?t=${Date.now()}`;
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const csv = await response.text();
-                const lines = csv.trim().split('\n');
-                
-                allMembers = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(',');
-                    if (cols[1]) {
-                        allMembers.push(cols[1].trim());
-                    }
-                }
-                console.log('멤버 로드:', allMembers.length);
+                fetchedMembers = parseCSV(csv)
+                    .map(row => getField(row, ['이름', '성명', '닉네임', 'name', 'Name']))
+                    .filter(Boolean);
+                syncAllMembers();
+                console.log('멤버 로드:', fetchedMembers.length);
             } catch (e) {
+                fetchedMembers = [];
+                syncAllMembers();
                 console.error('멤버 로드 실패:', e);
+                showToast('최신 멤버 목록을 불러오지 못했습니다. 기존 설정의 팀원만 표시합니다.', 'error');
             }
         }
 
         // 설정 로드
         async function loadConfig() {
+            setConfigStatus('설정 파일을 불러오는 중입니다…');
+            setEditorEnabled(false);
+
             try {
                 const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${CONFIG_PATH}?t=${Date.now()}`;
-                const response = await fetch(url);
-                
-                if (response.ok) {
-                    config = await response.json();
-                } else {
-                    // 기본 설정
-                    config = {
-                        admins: [{ id: 'admin', password: 'admin' }],
-                        groups: []
-                    };
-                }
-                
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const loaded = await response.json();
+                config = normalizeConfig(loaded);
+                loadedConfigSnapshot = stableStringify(config);
+                configLoaded = true;
                 hasChanges = false;
                 document.getElementById('saveBar').style.display = 'none';
+                syncAllMembers();
                 renderGroups();
-                renderAdmins();
+                setEditorEnabled(true);
+                setConfigStatus('설정을 정상적으로 불러왔습니다. 저장할 때 GitHub 토큰으로 인증합니다.', 'success');
             } catch (e) {
                 console.error('설정 로드 실패:', e);
-                config = {
-                    admins: [{ id: 'admin', password: 'admin' }],
-                    groups: []
-                };
+                configLoaded = false;
+                hasChanges = false;
+                document.getElementById('saveBar').style.display = 'none';
+                setEditorEnabled(false);
+                setConfigStatus(
+                    `설정 파일을 불러오지 못했습니다 (${e.message}). 데이터 보호를 위해 편집과 저장을 차단했습니다.`,
+                    'error'
+                );
             }
         }
 
-        // 로그인 체크
-        function checkLogin() {
-            const saved = sessionStorage.getItem('adminUser');
-            if (saved) {
-                currentUser = saved;
-                showMain();
+        function setConfigStatus(message, type = '') {
+            const status = document.getElementById('configStatus');
+            status.textContent = message;
+            status.className = `status-banner ${type}`.trim();
+        }
+
+        function setEditorEnabled(enabled) {
+            document.getElementById('groupsTab').classList.toggle('editor-disabled', !enabled);
+        }
+
+        function normalizeConfig(data) {
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('config.json 형식이 올바르지 않습니다');
             }
+
+            const normalized = { ...data };
+            normalized.groups = Array.isArray(data.groups) ? data.groups.map((group, groupIndex) => ({
+                ...group,
+                id: String(group?.id ?? `group-${groupIndex + 1}`),
+                name: String(group?.name ?? `그룹 ${groupIndex + 1}`).trim(),
+                teams: Array.isArray(group?.teams) ? group.teams.map((team, teamIndex) => ({
+                    ...team,
+                    id: String(team?.id ?? `team-${groupIndex + 1}-${teamIndex + 1}`),
+                    name: String(team?.name ?? `팀 ${teamIndex + 1}`).trim(),
+                    members: Array.isArray(team?.members)
+                        ? [...new Set(team.members.map(normalizeMemberName).filter(Boolean))]
+                        : []
+                })) : []
+            })) : [];
+
+            return normalized;
         }
 
-        // 로그인
-        function doLogin() {
-            const id = document.getElementById('loginId').value;
-            const pw = document.getElementById('loginPw').value;
-            
-            const admin = config.admins.find(a => a.id === id && a.password === pw);
-            
-            if (admin) {
-                currentUser = id;
-                sessionStorage.setItem('adminUser', id);
-                showMain();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
+        function normalizeMemberName(member) {
+            if (typeof member === 'string') return member.trim();
+            if (!member || typeof member !== 'object') return '';
+            return String(member.name ?? member['이름'] ?? member.displayName ?? '').trim();
+        }
+
+        function syncAllMembers() {
+            const members = new Set(fetchedMembers.map(name => String(name).trim()).filter(Boolean));
+            (config.groups || []).forEach(group => {
+                (group.teams || []).forEach(team => {
+                    (team.members || []).forEach(member => members.add(member));
+                });
+            });
+            allMembers = [...members].sort((a, b) => a.localeCompare(b, 'ko'));
+        }
+
+        function parseCSV(csv) {
+            if (typeof csv !== 'string' || !csv.trim()) return [];
+
+            const text = csv.replace(/^\uFEFF/, '');
+            const records = [];
+            let record = [];
+            let field = '';
+            let quoted = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"') {
+                    if (quoted && text[i + 1] === '"') {
+                        field += '"';
+                        i++;
+                    } else {
+                        quoted = !quoted;
+                    }
+                } else if (char === ',' && !quoted) {
+                    record.push(field);
+                    field = '';
+                } else if ((char === '\n' || char === '\r') && !quoted) {
+                    if (char === '\r' && text[i + 1] === '\n') i++;
+                    record.push(field);
+                    if (record.some(value => String(value).trim() !== '')) records.push(record);
+                    record = [];
+                    field = '';
+                } else {
+                    field += char;
+                }
             }
+
+            record.push(field);
+            if (record.some(value => String(value).trim() !== '')) records.push(record);
+            if (records.length < 2) return [];
+
+            const headers = records.shift().map(header => String(header).replace(/^\uFEFF/, '').trim());
+            return records.map(values => {
+                const row = {};
+                headers.forEach((header, index) => {
+                    if (header) row[header] = String(values[index] ?? '').trim();
+                });
+                return row;
+            });
         }
 
-        // 로그아웃
-        function doLogout() {
-            sessionStorage.removeItem('adminUser');
-            location.reload();
-        }
-
-        // 메인 표시
-        function showMain() {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainContent').style.display = 'block';
-        }
-
-        // 탭 전환
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            
-            document.getElementById('groupsTab').style.display = tab === 'groups' ? 'block' : 'none';
-            document.getElementById('adminsTab').style.display = tab === 'admins' ? 'block' : 'none';
+        function getField(row, aliases) {
+            for (const key of aliases) {
+                const value = row?.[key];
+                if (value !== undefined && value !== null && String(value).trim() !== '') {
+                    return String(value).trim();
+                }
+            }
+            return '';
         }
 
         // 그룹 렌더링
@@ -740,43 +710,31 @@
             container.innerHTML = config.groups.map(group => `
                 <div class="group-item">
                     <div class="item-header">
-                        <span class="item-name">🏆 ${group.name}</span>
+                        <span class="item-name">🏆 ${escapeHTML(group.name)}</span>
                         <div class="item-actions">
-                            <button class="item-btn item-btn-edit" onclick="showAddTeamModal('${group.id}')">+ 팀 추가</button>
-                            <button class="item-btn item-btn-edit" onclick="showEditGroupModal('${group.id}')">수정</button>
-                            <button class="item-btn item-btn-delete" onclick="deleteGroup('${group.id}')">삭제</button>
+                            <button class="item-btn item-btn-edit" onclick="showAddTeamModal(${actionArg(group.id)})">+ 팀 추가</button>
+                            <button class="item-btn item-btn-edit" onclick="showEditGroupModal(${actionArg(group.id)})">수정</button>
+                            <button class="item-btn item-btn-delete" onclick="deleteGroup(${actionArg(group.id)})">삭제</button>
                         </div>
                     </div>
                     <div class="teams-container">
                         ${(group.teams || []).map(team => `
                             <div class="team-item">
                                 <div class="item-header">
-                                    <span class="item-name">👥 ${team.name}</span>
+                                    <span class="item-name">👥 ${escapeHTML(team.name)}</span>
                                     <div class="item-actions">
-                                        <button class="item-btn item-btn-edit" onclick="showEditTeamModal('${group.id}', '${team.id}')">수정</button>
-                                        <button class="item-btn item-btn-delete" onclick="deleteTeam('${group.id}', '${team.id}')">삭제</button>
+                                        <button class="item-btn item-btn-edit" onclick="showEditTeamModal(${actionArg(group.id)}, ${actionArg(team.id)})">수정</button>
+                                        <button class="item-btn item-btn-delete" onclick="deleteTeam(${actionArg(group.id)}, ${actionArg(team.id)})">삭제</button>
                                     </div>
                                 </div>
                                 <div class="members-list">
-                                    ${(team.members || []).map(m => `<span class="member-tag">${m}</span>`).join('')}
+                                    ${(team.members || []).map(m => `<span class="member-tag">${escapeHTML(m)}</span>`).join('')}
                                     ${team.members?.length === 0 ? '<span style="color:#666">팀원 없음</span>' : ''}
                                 </div>
                             </div>
                         `).join('')}
                         ${(group.teams || []).length === 0 ? '<div class="empty-state" style="padding:20px">팀이 없습니다.</div>' : ''}
                     </div>
-                </div>
-            `).join('');
-        }
-
-        // 관리자 렌더링
-        function renderAdmins() {
-            const container = document.getElementById('adminsList');
-            
-            container.innerHTML = config.admins.map(admin => `
-                <div class="admin-item">
-                    <span class="admin-id">👤 ${admin.id}</span>
-                    ${admin.id !== 'admin' ? `<button class="item-btn item-btn-delete" onclick="deleteAdmin('${admin.id}')">삭제</button>` : '<span style="color:#666;font-size:0.8rem">기본 계정</span>'}
                 </div>
             `).join('');
         }
@@ -897,11 +855,11 @@
                 
                 return `
                     <label class="member-checkbox" style="${isAssigned && !isChecked ? 'opacity:0.4' : ''}">
-                        <input type="checkbox" value="${member}" 
+                        <input type="checkbox" value="${escapeHTML(member)}" 
                             ${isChecked ? 'checked' : ''} 
                             ${isAssigned && !isChecked ? 'disabled' : ''}
-                            onchange="toggleMemberSelection('${member}', this.checked)">
-                        <span>${member}</span>
+                            onchange="toggleMemberSelection(${actionArg(member)}, this.checked)">
+                        <span>${escapeHTML(member)}</span>
                         ${isAssigned && !isChecked ? '<span style="color:#f87171;font-size:0.75rem;margin-left:auto">다른팀</span>' : ''}
                     </label>
                 `;
@@ -971,142 +929,180 @@
             showToast('팀이 삭제되었습니다', 'success');
         }
 
-        // 관리자 추가 모달
-        function showAddAdminModal() {
-            document.getElementById('newAdminId').value = '';
-            document.getElementById('newAdminPw').value = '';
-            document.getElementById('adminModal').classList.add('active');
-        }
-
-        // 관리자 추가
-        function addAdmin() {
-            const id = document.getElementById('newAdminId').value.trim();
-            const pw = document.getElementById('newAdminPw').value;
-            
-            if (!id || !pw) {
-                showToast('아이디와 비밀번호를 입력하세요', 'error');
-                return;
-            }
-            
-            if (config.admins.some(a => a.id === id)) {
-                showToast('이미 존재하는 아이디입니다', 'error');
-                return;
-            }
-            
-            config.admins.push({ id, password: pw });
-            markChanged();
-            renderAdmins();
-            closeModal('adminModal');
-            showToast('관리자가 추가되었습니다', 'success');
-        }
-
-        // 관리자 삭제
-        function deleteAdmin(id) {
-            if (id === 'admin') {
-                showToast('기본 계정은 삭제할 수 없습니다', 'error');
-                return;
-            }
-            
-            if (!confirm('이 관리자를 삭제하시겠습니까?')) return;
-            
-            config.admins = config.admins.filter(a => a.id !== id);
-            markChanged();
-            renderAdmins();
-            showToast('관리자가 삭제되었습니다', 'success');
-        }
-
-        // 비밀번호 변경
-        function changeMyPassword() {
-            const current = document.getElementById('currentPw').value;
-            const newPw = document.getElementById('newPw').value;
-            const confirm = document.getElementById('newPwConfirm').value;
-            
-            const admin = config.admins.find(a => a.id === currentUser);
-            
-            if (!admin || admin.password !== current) {
-                showToast('현재 비밀번호가 틀렸습니다', 'error');
-                return;
-            }
-            
-            if (newPw !== confirm) {
-                showToast('새 비밀번호가 일치하지 않습니다', 'error');
-                return;
-            }
-            
-            if (newPw.length < 4) {
-                showToast('비밀번호는 4자 이상이어야 합니다', 'error');
-                return;
-            }
-            
-            admin.password = newPw;
-            markChanged();
-            
-            document.getElementById('currentPw').value = '';
-            document.getElementById('newPw').value = '';
-            document.getElementById('newPwConfirm').value = '';
-            
-            showToast('비밀번호가 변경되었습니다. GitHub에 저장하세요.', 'success');
-        }
-
         // 변경 표시
         function markChanged() {
+            if (!configLoaded) return;
             hasChanges = true;
             document.getElementById('saveBar').style.display = 'flex';
+            setConfigStatus('저장되지 않은 변경 내용이 있습니다. 검토 후 GitHub에 저장하세요.');
         }
 
-        // GitHub에 저장
-        async function saveConfig() {
-            const token = prompt('GitHub Personal Access Token을 입력하세요:\n(Settings > Developer settings > Personal access tokens에서 생성)');
-            
-            if (!token) return;
-            
+        async function discardChanges() {
+            if (!hasChanges) return;
+            if (!confirm('저장하지 않은 변경 내용을 취소하고 GitHub의 설정을 다시 불러오시겠습니까?')) return;
+            await loadConfig();
+            showToast('변경 내용을 취소했습니다.', 'success');
+        }
+
+        // GitHub 저장 인증 모달 표시
+        function saveConfig() {
+            if (!configLoaded) {
+                showToast('설정을 정상적으로 불러온 후 저장할 수 있습니다.', 'error');
+                return;
+            }
+            if (!hasChanges) {
+                showToast('저장할 변경 내용이 없습니다.');
+                return;
+            }
+
+            const input = document.getElementById('githubToken');
+            input.value = '';
+            document.getElementById('tokenModal').classList.add('active');
+            setTimeout(() => input.focus(), 0);
+        }
+
+        function closeTokenModal() {
+            if (saveInProgress) return;
+            document.getElementById('githubToken').value = '';
+            document.getElementById('tokenModal').classList.remove('active');
+        }
+
+        // GitHub의 현재 설정과 처음 읽은 설정이 같은 경우에만 저장한다.
+        async function confirmSaveConfig() {
+            if (saveInProgress || !configLoaded || !hasChanges) return;
+
+            const tokenInput = document.getElementById('githubToken');
+            const token = tokenInput.value.trim();
+            if (!token) {
+                showToast('GitHub 토큰을 입력하세요.', 'error');
+                tokenInput.focus();
+                return;
+            }
+
+            const saveButton = document.getElementById('confirmSaveBtn');
+            saveInProgress = true;
+            saveButton.disabled = true;
+            saveButton.textContent = '저장 중…';
+
             try {
-                // 현재 파일의 SHA 가져오기
-                const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`;
-                let sha = '';
-                
-                try {
-                    const getRes = await fetch(getUrl, {
-                        headers: { 'Authorization': `token ${token}` }
-                    });
-                    if (getRes.ok) {
-                        const data = await getRes.json();
-                        sha = data.sha;
-                    }
-                } catch (e) {}
-                
-                // 파일 업데이트
-                config.lastUpdated = new Date().toISOString();
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
-                
+                const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                };
+
+                const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(BRANCH)}`, {
+                    headers,
+                    cache: 'no-store'
+                });
+                if (!getRes.ok) throw await githubResponseError(getRes, '현재 설정 확인 실패');
+
+                const currentFile = await getRes.json();
+                if (!currentFile.sha || !currentFile.content) {
+                    throw new Error('GitHub에서 config.json의 SHA 또는 내용을 받지 못했습니다.');
+                }
+
+                const remoteConfig = normalizeConfig(JSON.parse(decodeBase64Utf8(currentFile.content)));
+                if (stableStringify(remoteConfig) !== loadedConfigSnapshot) {
+                    throw new Error('다른 사용자가 설정을 먼저 변경했습니다. 변경 취소 후 최신 설정을 다시 불러와 주세요.');
+                }
+
+                const configToSave = JSON.parse(JSON.stringify(config));
+                configToSave.lastUpdated = new Date().toISOString();
+                const content = encodeBase64Utf8(JSON.stringify(configToSave, null, 2));
+
                 const body = {
                     message: '⚙️ 설정 업데이트',
                     content: content,
-                    branch: BRANCH
+                    branch: BRANCH,
+                    sha: currentFile.sha
                 };
-                
-                if (sha) body.sha = sha;
-                
-                const res = await fetch(getUrl, {
+
+                const res = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json'
+                        ...headers,
+                        'Content-Type': 'application/json; charset=utf-8'
                     },
                     body: JSON.stringify(body)
                 });
-                
+
                 if (res.ok) {
+                    config = configToSave;
+                    loadedConfigSnapshot = stableStringify(config);
                     hasChanges = false;
                     document.getElementById('saveBar').style.display = 'none';
+                    closeTokenModalAfterSave();
+                    setConfigStatus('설정을 GitHub에 저장했습니다.', 'success');
                     showToast('GitHub에 저장되었습니다!', 'success');
                 } else {
-                    throw new Error('저장 실패');
+                    throw await githubResponseError(res, '저장 실패');
                 }
             } catch (e) {
                 console.error(e);
+                setConfigStatus('저장하지 못했습니다: ' + e.message, 'error');
                 showToast('저장 실패: ' + e.message, 'error');
+            } finally {
+                tokenInput.value = '';
+                saveInProgress = false;
+                saveButton.disabled = false;
+                saveButton.textContent = '저장';
             }
+        }
+
+        function closeTokenModalAfterSave() {
+            document.getElementById('githubToken').value = '';
+            document.getElementById('tokenModal').classList.remove('active');
+        }
+
+        async function githubResponseError(response, prefix) {
+            let detail = '';
+            try {
+                const data = await response.json();
+                detail = data?.message ? `: ${data.message}` : '';
+            } catch (e) {}
+            return new Error(`${prefix} (HTTP ${response.status})${detail}`);
+        }
+
+        function encodeBase64Utf8(text) {
+            const bytes = new TextEncoder().encode(text);
+            let binary = '';
+            bytes.forEach(byte => binary += String.fromCharCode(byte));
+            return btoa(binary);
+        }
+
+        function decodeBase64Utf8(base64) {
+            const binary = atob(String(base64).replace(/\s/g, ''));
+            const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+            return new TextDecoder().decode(bytes);
+        }
+
+        function stableStringify(value) {
+            const sortValue = item => {
+                if (Array.isArray(item)) return item.map(sortValue);
+                if (item && typeof item === 'object') {
+                    return Object.keys(item).sort().reduce((result, key) => {
+                        result[key] = sortValue(item[key]);
+                        return result;
+                    }, {});
+                }
+                return item;
+            };
+            return JSON.stringify(sortValue(value));
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function actionArg(value) {
+            return escapeHTML(JSON.stringify(String(value ?? '')));
         }
 
         // 토스트
