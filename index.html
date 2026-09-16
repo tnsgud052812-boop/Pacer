@@ -141,6 +141,42 @@
             font-weight: 400;
         }
 
+        .season-range {
+            display: block;
+            margin-top: 3px;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .view-switch {
+            display: flex;
+            width: fit-content;
+            margin: 0 12px 14px;
+            padding: 3px;
+            gap: 3px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--surface);
+        }
+
+        .view-switch button {
+            padding: 7px 14px;
+            border: 0;
+            border-radius: 7px;
+            color: var(--text-dim);
+            background: transparent;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.78rem;
+        }
+
+        .view-switch button.active {
+            color: #fff;
+            background: var(--accent);
+        }
+
         /* ── Notice ── */
         .notice {
             background: rgba(240, 200, 80, 0.06);
@@ -636,8 +672,13 @@
 
 <div class="container">
     <!-- Notice -->
-    <div class="notice">
+    <div class="notice" id="dataNotice">
         ⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.
+    </div>
+
+    <div class="view-switch" id="viewSwitch" style="display:none;">
+        <button id="seasonViewBtn" onclick="switchViewMode('season')">시즌 집계</button>
+        <button id="monthlyViewBtn" onclick="switchViewMode('monthly')">월별 조회</button>
     </div>
 
     <!-- Month Nav -->
@@ -654,7 +695,7 @@
             <span class="val" id="sMembers">–</span>
         </div>
         <div class="summary-item">
-            <span class="lbl">전체 하루 평균</span>
+            <span class="lbl" id="sAvgLabel">전체 하루 평균</span>
             <span class="val val-accent" id="sAvg">–</span>
         </div>
         <div class="summary-item">
@@ -687,7 +728,7 @@
                         <th>이름</th>
                         <th>소속</th>
                         <th class="bar-cell"></th>
-                        <th>하루 평균</th>
+                        <th id="rankAvgLabel">하루 평균</th>
                     </tr>
                 </thead>
                 <tbody id="rankBody"></tbody>
@@ -719,18 +760,26 @@ let latestData = [];
 let availableMonths = [];
 let currentMonthIdx = 0; // index into availableMonths
 let latestDataMonth = '';
+let seasonData = [];
+let seasonStatus = null;
+let viewMode = 'monthly';
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
     await loadConfig();
     await loadLatestData();
-    await loadAvailableMonths();
+    await Promise.all([loadAvailableMonths(), loadSeasonData()]);
     currentMonthIdx = 0; // newest
-    updateMonthUI();
-    if (getSelectedMonth() && getSelectedMonth() !== latestDataMonth) {
+
+    if (hasSeasonView()) {
+        viewMode = 'season';
+        document.getElementById('viewSwitch').style.display = 'flex';
+    } else if (getSelectedMonth() && getSelectedMonth() !== latestDataMonth) {
         await loadMonthData();
     }
+
+    updatePeriodUI();
     render();
 }
 
@@ -802,6 +851,33 @@ async function loadAvailableMonths() {
     availableMonths = [...months].sort((a, b) => monthSortValue(b) - monthSortValue(a));
 }
 
+async function loadSeasonData() {
+    seasonData = [];
+    seasonStatus = null;
+
+    try {
+        const statusUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/season_status.json?t=${Date.now()}`;
+        const statusResponse = await fetch(statusUrl, { cache: 'no-store' });
+        if (!statusResponse.ok) throw new Error(`status HTTP ${statusResponse.status}`);
+        seasonStatus = await statusResponse.json();
+
+        if (!['before', 'active', 'ended'].includes(seasonStatus?.status)) return;
+
+        const csvUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/season.csv?t=${Date.now()}`;
+        const csvResponse = await fetch(csvUrl, { cache: 'no-store' });
+        if (!csvResponse.ok) throw new Error(`CSV HTTP ${csvResponse.status}`);
+        seasonData = normalizeSeasonRows(parseCSV(await csvResponse.text()));
+
+        if (seasonStatus.generatedAt) {
+            document.getElementById('updateTime').textContent = '시즌 집계 ' + formatTimestamp(seasonStatus.generatedAt);
+        }
+    } catch (error) {
+        seasonData = [];
+        seasonStatus = null;
+        console.error('season data error', error);
+    }
+}
+
 function parseCSV(csv) {
     if (typeof csv !== 'string' || !csv.trim()) return [];
 
@@ -867,7 +943,15 @@ function normalizeConfig(data) {
         };
     });
 
-    return { ...(data || {}), teams };
+    const seasonSource = data?.season && typeof data.season === 'object' ? data.season : {};
+    const season = {
+        ...seasonSource,
+        name: String(seasonSource.name ?? '').trim(),
+        startDate: String(seasonSource.startDate ?? '').trim(),
+        endDate: String(seasonSource.endDate ?? '').trim()
+    };
+
+    return { ...(data || {}), teams, season };
 }
 
 function normalizeMemberName(member) {
@@ -899,6 +983,22 @@ function normalizeStepRows(rows) {
             '크롤링일시': getField(row, ['크롤링일시', '크롤링 일시', '수집일시', '업데이트일시'])
         };
     }).filter(row => row['이름']);
+}
+
+function normalizeSeasonRows(rows) {
+    return rows.map(row => ({
+        ...row,
+        '순위': getField(row, ['순위', 'rank', 'Rank']),
+        '이름': getField(row, ['이름', '성명', '닉네임', 'name', 'Name']),
+        '시즌누적': getField(row, ['시즌누적', '시즌 누적', '누적걸음수']),
+        '하루평균': getField(row, ['하루평균', '하루 평균', '일평균']),
+        '집계일수': getField(row, ['집계일수', '집계 일수']),
+        '시즌명': getField(row, ['시즌명', '시즌 이름']),
+        '시작일': getField(row, ['시작일', '시즌시작일']),
+        '종료일': getField(row, ['종료일', '시즌종료일']),
+        '집계기준일': getField(row, ['집계기준일', '기준일']),
+        '생성일시': getField(row, ['생성일시', '업데이트일시'])
+    })).filter(row => row['이름']);
 }
 
 function toOptionalNumber(value) {
@@ -945,6 +1045,24 @@ function monthSortValue(monthString) {
     return parsed ? parsed.year * 12 + parsed.month : 0;
 }
 
+function hasSeasonView() {
+    return Boolean(
+        seasonStatus &&
+        ['before', 'active', 'ended'].includes(seasonStatus.status) &&
+        seasonStatus.seasonName &&
+        seasonStatus.startDate &&
+        seasonStatus.endDate
+    );
+}
+
+function getActiveData() {
+    return viewMode === 'season' && hasSeasonView() ? seasonData : latestData;
+}
+
+function formatTimestamp(value) {
+    return String(value || '').replace('T', ' ').replace(/\+09:00$/, '');
+}
+
 /* ── Month Navigation ── */
 
 function getSelectedMonth() {
@@ -958,6 +1076,10 @@ function parseMonthStr(s) {
 }
 
 function getDaysElapsed() {
+    if (viewMode === 'season' && hasSeasonView()) {
+        return Math.max(0, toNumber(seasonStatus.expectedDays));
+    }
+
     const ms = getSelectedMonth();
     const parsed = parseMonthStr(ms);
     if (!parsed) return 1;
@@ -981,11 +1103,70 @@ function updateMonthUI() {
     document.getElementById('nextMonth').disabled = currentMonthIdx <= 0;
 }
 
+function updatePeriodUI() {
+    const prevButton = document.getElementById('prevMonth');
+    const nextButton = document.getElementById('nextMonth');
+    const label = document.getElementById('monthLabel');
+    const seasonButton = document.getElementById('seasonViewBtn');
+    const monthlyButton = document.getElementById('monthlyViewBtn');
+
+    seasonButton.classList.toggle('active', viewMode === 'season');
+    monthlyButton.classList.toggle('active', viewMode === 'monthly');
+
+    if (viewMode === 'season' && hasSeasonView()) {
+        prevButton.style.display = 'none';
+        nextButton.style.display = 'none';
+        const statusText = seasonStatus.status === 'before'
+            ? '시작 전'
+            : seasonStatus.status === 'active' ? '진행 중' : '종료';
+        label.innerHTML = `${escapeHTML(seasonStatus.seasonName)}<span class="season-range">${escapeHTML(seasonStatus.startDate)} ~ ${escapeHTML(seasonStatus.endDate)} · ${statusText}</span>`;
+        document.getElementById('sAvgLabel').textContent = '시즌 하루 평균';
+        document.getElementById('rankAvgLabel').textContent = '시즌 하루 평균';
+        updateSeasonNotice();
+    } else {
+        prevButton.style.display = 'flex';
+        nextButton.style.display = 'flex';
+        updateMonthUI();
+        document.getElementById('sAvgLabel').textContent = '전체 하루 평균';
+        document.getElementById('rankAvgLabel').textContent = '하루 평균';
+        document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
+    }
+}
+
+function updateSeasonNotice() {
+    const notice = document.getElementById('dataNotice');
+    const missingCount = Array.isArray(seasonStatus.missingDates) ? seasonStatus.missingDates.length : 0;
+    const unknownCount = toNumber(seasonStatus.unknownValueCount);
+
+    if (seasonStatus.status === 'before') {
+        notice.textContent = `📅 ${seasonStatus.startDate}부터 시즌 집계를 시작합니다.`;
+    } else if (seasonStatus.status === 'ended') {
+        notice.textContent = `🏁 시즌이 종료되어 ${seasonStatus.endDate} 기준 결과로 고정되었습니다.`;
+    } else {
+        notice.textContent = `🚶 시즌 집계 중 · 기준일 ${seasonStatus.asOfDate || '-'} · ${seasonStatus.availableDays}/${seasonStatus.expectedDays}일 데이터 반영`;
+    }
+
+    if (missingCount || unknownCount) {
+        notice.textContent += ` · ⚠️ 누락 날짜 ${missingCount}일, 미확정 값 ${unknownCount}건`;
+    }
+}
+
+async function switchViewMode(mode) {
+    if (mode === 'season' && !hasSeasonView()) return;
+    if (mode === viewMode) return;
+
+    viewMode = mode;
+    if (viewMode === 'monthly') await loadMonthData();
+    updatePeriodUI();
+    render();
+}
+
 function changeMonth(dir) {
+    if (viewMode !== 'monthly') return;
     const next = currentMonthIdx - dir; // -dir because array is newest-first
     if (next < 0 || next >= availableMonths.length) return;
     currentMonthIdx = next;
-    updateMonthUI();
+    updatePeriodUI();
 
     // 월이 바뀌면 해당 월의 latest를 로드해야 하지만,
     // latest.csv는 현재 월만 반영. 과거 월은 daily CSV 합산 필요.
@@ -1051,16 +1232,17 @@ function getRegisteredMembers() {
 }
 
 function getMember(name) {
-    return latestData.find(d => d['이름'] === name) || {};
+    return getActiveData().find(d => d['이름'] === name) || {};
 }
 
-function getMonthlyTotal(name) {
+function getAccumulatedTotal(name) {
     const d = getMember(name);
+    if (viewMode === 'season' && hasSeasonView()) return toNumber(d['시즌누적']);
     return toNumber(d['월누적'] ?? d['월간누적']);
 }
 
 function getDailyAvg(name) {
-    const total = getMonthlyTotal(name);
+    const total = getAccumulatedTotal(name);
     const days = getDaysElapsed();
     return days > 0 ? Math.floor(total / days) : 0;
 }
@@ -1071,10 +1253,10 @@ function getTeamStats() {
         let totalSteps = 0;
         let count = 0;
         (team.members || []).forEach(name => {
-            totalSteps += getMonthlyTotal(name);
+            totalSteps += getAccumulatedTotal(name);
             count++;
         });
-        const avgDaily = count > 0 ? Math.floor(totalSteps / count / days) : 0;
+        const avgDaily = count > 0 && days > 0 ? Math.floor(totalSteps / count / days) : 0;
         return { ...team, avgDaily, memberCount: count };
     }).sort((a, b) => b.avgDaily - a.avgDaily);
 }
@@ -1089,19 +1271,21 @@ function render() {
 
 function renderSummary() {
     const registered = getRegisteredMembers();
-    const data = latestData.filter(d => registered.has(d['이름']));
+    const data = getActiveData().filter(d => registered.has(d['이름']));
     document.getElementById('sMembers').textContent = data.length;
 
     const days = getDaysElapsed();
     let totalSteps = 0;
-    data.forEach(d => totalSteps += toNumber(d['월누적'] ?? d['월간누적']));
-    const avg = data.length > 0 ? Math.floor(totalSteps / data.length / days) : 0;
+    data.forEach(d => {
+        totalSteps += viewMode === 'season'
+            ? toNumber(d['시즌누적'])
+            : toNumber(d['월누적'] ?? d['월간누적']);
+    });
+    const avg = data.length > 0 && days > 0 ? Math.floor(totalSteps / data.length / days) : 0;
     document.getElementById('sAvg').textContent = fmt(avg);
 
     const teams = getTeamStats();
-    if (teams.length) {
-        document.getElementById('sTop').textContent = teams[0].name;
-    }
+    document.getElementById('sTop').textContent = teams.length ? teams[0].name : '-';
 }
 
 function renderTeams() {
@@ -1120,7 +1304,7 @@ function renderTeams() {
         const rc = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : 'rd';
 
         const members = (team.members || []).map(name => {
-            const total = getMonthlyTotal(name);
+            const total = getAccumulatedTotal(name);
             const avg = days > 0 ? Math.floor(total / days) : 0;
             return { name, avg, total };
         }).sort((a, b) => b.avg - a.avg);
@@ -1164,7 +1348,7 @@ function renderRanking(filter = '') {
 
     let rows = [];
     for (const name of registered) {
-        const total = getMonthlyTotal(name);
+        const total = getAccumulatedTotal(name);
         const avg = days > 0 ? Math.floor(total / days) : 0;
         rows.push({ name, avg, total, team: teamMap[name] || '-' });
     }
@@ -1208,6 +1392,63 @@ function switchTab(tab) {
 
 /* ── Detail Modal ── */
 
+function getSeasonMonths() {
+    if (!hasSeasonView()) return [];
+
+    const start = parseISODateParts(seasonStatus.startDate);
+    const end = parseISODateParts(seasonStatus.asOfDate || seasonStatus.startDate);
+    if (!start || !end) return [];
+
+    const months = [];
+    let year = start.year;
+    let month = start.month;
+    while (year < end.year || (year === end.year && month <= end.month)) {
+        months.push({ year, month });
+        month++;
+        if (month > 12) {
+            year++;
+            month = 1;
+        }
+    }
+    return months;
+}
+
+function parseISODateParts(value) {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function historyDateToISO(value, year, month) {
+    const normalized = normalizeHistoryDate(value);
+    const match = normalized.match(/^(\d{2})\/(\d{2})$/);
+    if (!match) return '';
+    const rowMonth = Number(match[1]);
+    const rowDay = Number(match[2]);
+    if (rowMonth !== month || rowDay < 1 || rowDay > 31) return '';
+    return `${year}-${String(month).padStart(2, '0')}-${String(rowDay).padStart(2, '0')}`;
+}
+
+async function loadMemberHistoryFile(name, year, month) {
+    const monthString = `${year}년${month}월`;
+    const fileName = encodeURIComponent(`${safeMemberFilename(name)}_${monthString}_Data.csv`);
+    const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
+
+    try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) return [];
+        return normalizeHistoryRows(parseCSV(await response.text())).map(row => ({
+            ...row,
+            _year: year,
+            _month: month,
+            _isoDate: historyDateToISO(row['날짜'], year, month)
+        }));
+    } catch (error) {
+        console.error(`member history error: ${monthString}`, error);
+        return [];
+    }
+}
+
 async function showDetail(name) {
     const overlay = document.getElementById('overlay');
     const bd = document.getElementById('modalBd');
@@ -1216,29 +1457,42 @@ async function showDetail(name) {
     overlay.classList.add('show');
 
     const days = getDaysElapsed();
-    const total = getMonthlyTotal(name);
+    const total = getAccumulatedTotal(name);
     const avg = days > 0 ? Math.floor(total / days) : 0;
 
-    // Load member history
-    const ms = getSelectedMonth();
-    const parsed = parseMonthStr(ms);
-    const monthStr2 = parsed ? `${parsed.year}년${parsed.month}월` : '';
-    const fileName = encodeURIComponent(`${safeMemberFilename(name)}_${monthStr2}_Data.csv`);
-    const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
+    const monthlyPeriod = parseMonthStr(getSelectedMonth());
+    const periods = viewMode === 'season'
+        ? getSeasonMonths()
+        : (monthlyPeriod ? [monthlyPeriod] : []);
 
-    let history = [];
-    try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (res.ok) history = normalizeHistoryRows(parseCSV(await res.text()));
-    } catch(e) {
-        console.error('member history error', e);
+    let history = (await Promise.all(
+        periods.map(period => loadMemberHistoryFile(name, period.year, period.month))
+    )).flat();
+
+    if (viewMode === 'season' && hasSeasonView()) {
+        const effectiveEnd = seasonStatus.asOfDate || seasonStatus.startDate;
+        history = history.filter(row =>
+            row._isoDate &&
+            row._isoDate >= seasonStatus.startDate &&
+            row._isoDate <= effectiveEnd
+        );
     }
 
     const dailySteps = history.map(h => toOptionalNumber(h['오늘걸음수'])).filter(v => v !== null && v > 0);
     const maxSteps = dailySteps.length ? Math.max(...dailySteps) : 0;
     const minSteps = dailySteps.length ? Math.min(...dailySteps) : 0;
-    const maxDay = history.find(h => toOptionalNumber(h['오늘걸음수']) === maxSteps)?.['날짜'] || '-';
-    const minDay = history.find(h => toOptionalNumber(h['오늘걸음수']) === minSteps)?.['날짜'] || '-';
+    const maxRow = history.find(h => toOptionalNumber(h['오늘걸음수']) === maxSteps);
+    const minRow = history.find(h => toOptionalNumber(h['오늘걸음수']) === minSteps);
+    const displayHistoryDate = row => row
+        ? (viewMode === 'season' ? row._isoDate.slice(5).replace('-', '/') : row['날짜'])
+        : '-';
+    const totalLabel = viewMode === 'season' ? '시즌 누적' : '월 누적';
+    const calendarHTML = periods.length
+        ? periods.map((period, index) => `
+            <div class="cal-title">📅 ${period.year}년 ${period.month}월</div>
+            <div class="cal-grid" id="calGrid-${index}"></div>
+        `).join('')
+        : '<div class="loading-box">표시할 기간이 없습니다.</div>';
 
     bd.innerHTML = `
         <div class="stat-grid">
@@ -1248,35 +1502,37 @@ async function showDetail(name) {
             </div>
             <div class="stat-card">
                 <div class="sv">${fmt(total)}</div>
-                <div class="sl">월 누적</div>
+                <div class="sl">${totalLabel}</div>
             </div>
             <div class="stat-card">
                 <div class="sv" style="color:var(--green)">${fmt(maxSteps)}</div>
                 <div class="sl">최대</div>
-                <div class="ss">${maxDay}</div>
+                <div class="ss">${displayHistoryDate(maxRow)}</div>
             </div>
             <div class="stat-card">
                 <div class="sv" style="color:var(--red)">${fmt(minSteps)}</div>
                 <div class="sl">최소</div>
-                <div class="ss">${minDay}</div>
+                <div class="ss">${displayHistoryDate(minRow)}</div>
             </div>
         </div>
 
-        <div class="cal-title">📅 ${parsed ? parsed.year : ''}년 ${parsed ? parsed.month : ''}월</div>
-        <div class="cal-grid" id="calGrid"></div>
+        ${calendarHTML}
     `;
 
-    // Render calendar
-    if (parsed) renderCalendar(parsed.year, parsed.month - 1, history);
+    periods.forEach((period, index) => {
+        renderCalendar(period.year, period.month - 1, history, `calGrid-${index}`);
+    });
 }
 
-function renderCalendar(year, month, history) {
-    const grid = document.getElementById('calGrid');
+function renderCalendar(year, month, history, gridId = 'calGrid') {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
     const today = getKSTParts();
     const hmap = {};
     history.forEach(h => {
         const steps = toOptionalNumber(h['오늘걸음수']);
-        if (h['날짜'] && steps !== null) hmap[h['날짜']] = steps;
+        const belongsToMonth = h._year === undefined || (h._year === year && h._month === month + 1);
+        if (belongsToMonth && h['날짜'] && steps !== null) hmap[h['날짜']] = steps;
     });
 
     const dayNames = ['일','월','화','수','목','금','토'];
