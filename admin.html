@@ -178,8 +178,8 @@
             font-weight: 600;
         }
 
-        /* 그룹/팀 리스트 */
-        .group-item, .team-item {
+        /* 팀 리스트 */
+        .team-item {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
@@ -187,7 +187,7 @@
             margin-bottom: 10px;
         }
 
-        .group-item:hover, .team-item:hover {
+        .team-item:hover {
             background: rgba(255, 255, 255, 0.06);
         }
 
@@ -224,12 +224,6 @@
         .item-btn-delete {
             background: rgba(248, 113, 113, 0.2);
             color: #f87171;
-        }
-
-        .teams-container {
-            margin-left: 20px;
-            padding-left: 15px;
-            border-left: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         .members-list {
@@ -554,8 +548,8 @@
 
         <div class="status-banner" id="configStatus">설정 파일을 불러오는 중입니다…</div>
 
-        <!-- 그룹/팀 관리 -->
-        <div class="tab-content editor-disabled" id="groupsTab">
+        <!-- 팀 관리 -->
+        <div class="tab-content editor-disabled" id="teamsTab">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">📅 시즌 집계 기간</span>
@@ -582,10 +576,10 @@
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📋 그룹 목록</span>
-                    <button class="btn btn-primary" onclick="showAddGroupModal()">+ 그룹 추가</button>
+                    <span class="card-title">📋 팀 목록</span>
+                    <button class="btn btn-primary" onclick="showAddTeamModal()">+ 팀 추가</button>
                 </div>
-                <div id="groupsList"></div>
+                <div id="teamsList"></div>
             </div>
         </div>
     </div>
@@ -594,26 +588,6 @@
     <div class="save-bar" id="saveBar" style="display:none;">
         <button class="btn" onclick="discardChanges()">변경 취소</button>
         <button class="btn btn-primary" onclick="saveConfig()">💾 GitHub에 저장</button>
-    </div>
-
-    <!-- 그룹 추가/수정 모달 -->
-    <div class="modal-overlay" id="groupModal">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title" id="groupModalTitle">그룹 추가</span>
-                <button class="modal-close" onclick="closeModal('groupModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">그룹 이름</label>
-                    <input type="text" class="form-input" id="groupName" placeholder="예: 그룹 A">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal('groupModal')">취소</button>
-                <button class="btn btn-primary" id="groupSaveBtn" onclick="saveGroup()">저장 후 팀 등록</button>
-            </div>
-        </div>
     </div>
 
     <!-- 팀 추가/수정 모달 -->
@@ -681,12 +655,10 @@
         const CONFIG_PATH = 'data/config.json';
 
         // 상태
-        let config = { groups: [] };
+        let config = { teams: [] };
         let allMembers = [];
         let fetchedMembers = [];
-        let editingGroupId = null;
         let editingTeamId = null;
-        let editingGroupIdForTeam = null;
         let hasChanges = false;
         let configLoaded = false;
         let loadedConfigSnapshot = '';
@@ -748,7 +720,7 @@
                 document.getElementById('saveBar').style.display = 'none';
                 syncAllMembers();
                 renderSeasonSettings();
-                renderGroups();
+                renderTeams();
                 setEditorEnabled(true);
                 setConfigStatus('설정을 정상적으로 불러왔습니다. 저장할 때 GitHub 토큰으로 인증합니다.', 'success');
             } catch (e) {
@@ -827,7 +799,7 @@
         }
 
         function setEditorEnabled(enabled) {
-            document.getElementById('groupsTab').classList.toggle('editor-disabled', !enabled);
+            document.getElementById('teamsTab').classList.toggle('editor-disabled', !enabled);
         }
 
         function normalizeConfig(data) {
@@ -843,19 +815,32 @@
                 startDate: String(season.startDate ?? '').trim(),
                 endDate: String(season.endDate ?? '').trim()
             };
-            normalized.groups = Array.isArray(data.groups) ? data.groups.map((group, groupIndex) => ({
-                ...group,
-                id: String(group?.id ?? `group-${groupIndex + 1}`),
-                name: String(group?.name ?? `그룹 ${groupIndex + 1}`).trim(),
-                teams: Array.isArray(group?.teams) ? group.teams.map((team, teamIndex) => ({
-                    ...team,
-                    id: String(team?.id ?? `team-${groupIndex + 1}-${teamIndex + 1}`),
-                    name: String(team?.name ?? `팀 ${teamIndex + 1}`).trim(),
-                    members: Array.isArray(team?.members)
-                        ? [...new Set(team.members.map(normalizeMemberName).filter(Boolean))]
-                        : []
-                })) : []
-            })) : [];
+            const sourceTeams = Array.isArray(data.teams)
+                ? data.teams
+                : Array.isArray(data.groups)
+                    ? data.groups.flatMap((group, groupIndex) => {
+                        const nestedTeams = Array.isArray(group?.teams) ? group.teams : [];
+                        if (nestedTeams.length) return nestedTeams;
+
+                        const groupName = String(group?.name ?? '').trim();
+                        if (!groupName) return [];
+                        return [{
+                            id: group?.id ?? `team-${groupIndex + 1}`,
+                            name: groupName,
+                            members: Array.isArray(group?.members) ? group.members : []
+                        }];
+                    })
+                    : [];
+
+            normalized.teams = sourceTeams.map((team, teamIndex) => ({
+                ...team,
+                id: String(team?.id ?? `team-${teamIndex + 1}`),
+                name: String(team?.name ?? `팀 ${teamIndex + 1}`).trim(),
+                members: Array.isArray(team?.members)
+                    ? [...new Set(team.members.map(normalizeMemberName).filter(Boolean))]
+                    : []
+            }));
+            delete normalized.groups;
 
             return normalized;
         }
@@ -920,10 +905,8 @@
 
         function syncAllMembers() {
             const members = new Set(fetchedMembers.map(name => String(name).trim()).filter(Boolean));
-            (config.groups || []).forEach(group => {
-                (group.teams || []).forEach(team => {
-                    (team.members || []).forEach(member => members.add(member));
-                });
+            (config.teams || []).forEach(team => {
+                (team.members || []).forEach(member => members.add(member));
             });
             allMembers = [...members].sort((a, b) => a.localeCompare(b, 'ko'));
         }
@@ -984,42 +967,27 @@
             return '';
         }
 
-        // 그룹 렌더링
-        function renderGroups() {
-            const container = document.getElementById('groupsList');
-            
-            if (config.groups.length === 0) {
-                container.innerHTML = '<div class="empty-state">그룹이 없습니다. 그룹을 추가해주세요.</div>';
+        // 팀 렌더링
+        function renderTeams() {
+            const container = document.getElementById('teamsList');
+
+            if (config.teams.length === 0) {
+                container.innerHTML = '<div class="empty-state">팀이 없습니다. 팀을 추가해주세요.</div>';
                 return;
             }
-            
-            container.innerHTML = config.groups.map(group => `
-                <div class="group-item">
+
+            container.innerHTML = config.teams.map(team => `
+                <div class="team-item">
                     <div class="item-header">
-                        <span class="item-name">🏆 ${escapeHTML(group.name)}</span>
+                        <span class="item-name">👥 ${escapeHTML(team.name)}</span>
                         <div class="item-actions">
-                            <button class="item-btn item-btn-edit" onclick="showAddTeamModal(${actionArg(group.id)})">+ 팀 추가</button>
-                            <button class="item-btn item-btn-edit" onclick="showEditGroupModal(${actionArg(group.id)})">수정</button>
-                            <button class="item-btn item-btn-delete" onclick="deleteGroup(${actionArg(group.id)})">삭제</button>
+                            <button class="item-btn item-btn-edit" onclick="showEditTeamModal(${actionArg(team.id)})">수정</button>
+                            <button class="item-btn item-btn-delete" onclick="deleteTeam(${actionArg(team.id)})">삭제</button>
                         </div>
                     </div>
-                    <div class="teams-container">
-                        ${(group.teams || []).map(team => `
-                            <div class="team-item">
-                                <div class="item-header">
-                                    <span class="item-name">👥 ${escapeHTML(team.name)}</span>
-                                    <div class="item-actions">
-                                        <button class="item-btn item-btn-edit" onclick="showEditTeamModal(${actionArg(group.id)}, ${actionArg(team.id)})">수정</button>
-                                        <button class="item-btn item-btn-delete" onclick="deleteTeam(${actionArg(group.id)}, ${actionArg(team.id)})">삭제</button>
-                                    </div>
-                                </div>
-                                <div class="members-list">
-                                    ${(team.members || []).map(m => `<span class="member-tag">${escapeHTML(m)}</span>`).join('')}
-                                    ${team.members?.length === 0 ? '<span style="color:#666">팀원 없음</span>' : ''}
-                                </div>
-                            </div>
-                        `).join('')}
-                        ${(group.teams || []).length === 0 ? '<div class="empty-state" style="padding:20px">팀이 없습니다.</div>' : ''}
+                    <div class="members-list">
+                        ${(team.members || []).map(member => `<span class="member-tag">${escapeHTML(member)}</span>`).join('')}
+                        ${team.members?.length === 0 ? '<span style="color:#666">팀원 없음</span>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -1030,93 +998,23 @@
             document.getElementById(id).classList.remove('active');
         }
 
-        // 그룹 추가 모달
-        function showAddGroupModal() {
-            editingGroupId = null;
-            document.getElementById('groupModalTitle').textContent = '그룹 추가';
-            document.getElementById('groupSaveBtn').textContent = '저장 후 팀 등록';
-            document.getElementById('groupName').value = '';
-            document.getElementById('groupModal').classList.add('active');
-        }
-
-        // 그룹 수정 모달
-        function showEditGroupModal(groupId) {
-            const group = config.groups.find(g => g.id === groupId);
-            if (!group) return;
-            
-            editingGroupId = groupId;
-            document.getElementById('groupModalTitle').textContent = '그룹 수정';
-            document.getElementById('groupSaveBtn').textContent = '저장';
-            document.getElementById('groupName').value = group.name;
-            document.getElementById('groupModal').classList.add('active');
-        }
-
-        // 그룹 저장
-        function saveGroup() {
-            const name = document.getElementById('groupName').value.trim();
-            if (!name) {
-                showToast('그룹 이름을 입력하세요', 'error');
-                return;
-            }
-            
-            const isNewGroup = !editingGroupId;
-            let savedGroupId = editingGroupId;
-
-            if (!isNewGroup) {
-                const group = config.groups.find(g => g.id === editingGroupId);
-                if (group) group.name = name;
-            } else {
-                savedGroupId = 'group' + Date.now();
-                config.groups.push({
-                    id: savedGroupId,
-                    name: name,
-                    teams: []
-                });
-            }
-            
-            markChanged();
-            renderGroups();
-            closeModal('groupModal');
-
-            if (isNewGroup) {
-                showToast('그룹이 추가되었습니다. 팀원을 등록하세요.', 'success');
-                setTimeout(() => showAddTeamModal(savedGroupId, true), 0);
-            } else {
-                showToast('그룹이 저장되었습니다', 'success');
-            }
-        }
-
-        // 그룹 삭제
-        function deleteGroup(groupId) {
-            if (!confirm('이 그룹을 삭제하시겠습니까? 포함된 팀도 모두 삭제됩니다.')) return;
-            
-            config.groups = config.groups.filter(g => g.id !== groupId);
-            markChanged();
-            renderGroups();
-            showToast('그룹이 삭제되었습니다', 'success');
-        }
-
         // 팀 추가 모달
-        function showAddTeamModal(groupId, isFirstTeam = false) {
-            const group = config.groups.find(g => g.id === groupId);
+        function showAddTeamModal() {
             editingTeamId = null;
-            editingGroupIdForTeam = groupId;
-            document.getElementById('teamModalTitle').textContent = isFirstTeam ? '팀원 등록' : '팀 추가';
-            document.getElementById('teamNameGroup').style.display = isFirstTeam ? 'none' : 'block';
-            document.getElementById('teamName').value = isFirstTeam ? (group?.name || '') : '';
+            document.getElementById('teamModalTitle').textContent = '팀 추가';
+            document.getElementById('teamNameGroup').style.display = 'block';
+            document.getElementById('teamName').value = '';
             document.getElementById('memberSearch').value = '';
             renderMemberCheckboxes([]);
             document.getElementById('teamModal').classList.add('active');
         }
 
         // 팀 수정 모달
-        function showEditTeamModal(groupId, teamId) {
-            const group = config.groups.find(g => g.id === groupId);
-            const team = group?.teams?.find(t => t.id === teamId);
+        function showEditTeamModal(teamId) {
+            const team = config.teams.find(item => item.id === teamId);
             if (!team) return;
             
             editingTeamId = teamId;
-            editingGroupIdForTeam = groupId;
             document.getElementById('teamModalTitle').textContent = '팀 수정';
             document.getElementById('teamNameGroup').style.display = 'block';
             document.getElementById('teamName').value = team.name;
@@ -1140,12 +1038,10 @@
             
             // 이미 다른 팀에 배정된 멤버 찾기
             const assignedMembers = new Set();
-            config.groups.forEach(g => {
-                g.teams?.forEach(t => {
-                    if (!(editingGroupIdForTeam === g.id && editingTeamId === t.id)) {
-                        t.members?.forEach(m => assignedMembers.add(m));
-                    }
-                });
+            config.teams.forEach(team => {
+                if (editingTeamId !== team.id) {
+                    team.members?.forEach(member => assignedMembers.add(member));
+                }
             });
             
             const filtered = allMembers.filter(m => m.toLowerCase().includes(search));
@@ -1208,19 +1104,14 @@
             
             const selectedMembers = [...currentSelectedMembers];
             
-            const group = config.groups.find(g => g.id === editingGroupIdForTeam);
-            if (!group) return;
-            
-            if (!group.teams) group.teams = [];
-            
             if (editingTeamId) {
-                const team = group.teams.find(t => t.id === editingTeamId);
+                const team = config.teams.find(item => item.id === editingTeamId);
                 if (team) {
                     team.name = name;
                     team.members = selectedMembers;
                 }
             } else {
-                group.teams.push({
+                config.teams.push({
                     id: 'team' + Date.now(),
                     name: name,
                     members: selectedMembers
@@ -1228,22 +1119,18 @@
             }
             
             markChanged();
-            renderGroups();
+            renderTeams();
             closeModal('teamModal');
             showToast('팀이 저장되었습니다', 'success');
         }
 
         // 팀 삭제
-        function deleteTeam(groupId, teamId) {
+        function deleteTeam(teamId) {
             if (!confirm('이 팀을 삭제하시겠습니까?')) return;
-            
-            const group = config.groups.find(g => g.id === groupId);
-            if (group) {
-                group.teams = group.teams.filter(t => t.id !== teamId);
-            }
-            
+
+            config.teams = config.teams.filter(team => team.id !== teamId);
             markChanged();
-            renderGroups();
+            renderTeams();
             showToast('팀이 삭제되었습니다', 'success');
         }
 
@@ -1435,4 +1322,3 @@
     </script>
 </body>
 </html>
-
