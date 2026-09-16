@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
+            color-scheme: dark;
             --bg: #0c0f14;
             --surface: #161a22;
             --surface2: #1e2330;
@@ -23,6 +24,25 @@
             --green: #4ade80;
             --red: #f87171;
             --radius: 12px;
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --bg: #f4f6fa;
+            --surface: #ffffff;
+            --surface2: #edf1f7;
+            --border: #d8dee9;
+            --text: #1f2937;
+            --text-dim: #647184;
+            --text-muted: #8a96a8;
+            --accent: #4169d8;
+            --accent-glow: rgba(65, 105, 216, 0.12);
+            --gold: #a87500;
+            --gold-dim: rgba(168, 117, 0, 0.1);
+            --silver: #667085;
+            --bronze: #a75f3b;
+            --green: #198754;
+            --red: #d14343;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -690,7 +710,7 @@
 <div class="header">
     <div class="logo">
         <div class="logo-icon">🚶</div>
-        캔탑스 만보걷기
+        <span id="siteTitle">캔탑스 만보걷기</span>
     </div>
     <div class="header-meta">
         <div id="updateTime">로딩 중...</div>
@@ -787,7 +807,10 @@ const REPO_OWNER = 'tnsgud052812-boop';
 const REPO_NAME = 'Pacer';
 const BRANCH = 'main';
 
-let config = { teams: [] };
+let config = {
+    teams: [],
+    display: { title: '캔탑스 만보걷기', theme: 'dark' }
+};
 let latestData = [];
 let availableMonths = [];
 let currentMonthIdx = 0; // index into availableMonths
@@ -823,8 +846,10 @@ async function loadConfig() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         config = normalizeConfig(data);
+        applyDisplaySettings();
     } catch(e) {
-        config = { teams: [] };
+        config = normalizeConfig({ teams: [] });
+        applyDisplaySettings();
         console.error('config error', e);
     }
 }
@@ -958,6 +983,14 @@ function parseCSV(csv) {
 }
 
 function normalizeConfig(data) {
+    const displaySource = data?.display && typeof data.display === 'object' ? data.display : {};
+    const displayTheme = String(displaySource.theme ?? 'dark').trim().toLowerCase();
+    const display = {
+        ...displaySource,
+        title: String(displaySource.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기',
+        theme: ['dark', 'light'].includes(displayTheme) ? displayTheme : 'dark'
+    };
+
     const sourceTeams = Array.isArray(data?.groups)
         ? data.groups.flatMap(group => Array.isArray(group?.teams) ? group.teams : [])
         : Array.isArray(data?.teams) ? data.teams : [];
@@ -982,7 +1015,15 @@ function normalizeConfig(data) {
         endDate: String(seasonSource.endDate ?? '').trim()
     };
 
-    return { ...(data || {}), teams, season };
+    return { ...(data || {}), teams, season, display };
+}
+
+function applyDisplaySettings() {
+    const title = config.display?.title || '캔탑스 만보걷기';
+    const theme = config.display?.theme === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    document.title = title;
+    document.getElementById('siteTitle').textContent = title;
 }
 
 function normalizeMemberName(member) {
