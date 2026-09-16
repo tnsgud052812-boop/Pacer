@@ -406,6 +406,11 @@
             text-align: right;
         }
 
+        .rank-table .numeric-cell {
+            text-align: right;
+            white-space: nowrap;
+        }
+
         .rank-table td {
             padding: 12px;
             border-bottom: 1px solid var(--border);
@@ -677,8 +682,8 @@
     </div>
 
     <div class="view-switch" id="viewSwitch" style="display:none;">
-        <button id="seasonViewBtn" onclick="switchViewMode('season')">시즌 집계</button>
-        <button id="monthlyViewBtn" onclick="switchViewMode('monthly')">월별 조회</button>
+        <button id="seasonViewBtn" onclick="switchViewMode('season')">시즌 랭킹</button>
+        <button id="monthlyViewBtn" onclick="switchViewMode('monthly')">월간 랭킹</button>
     </div>
 
     <!-- Month Nav -->
@@ -699,15 +704,15 @@
             <span class="val val-accent" id="sAvg">–</span>
         </div>
         <div class="summary-item">
-            <span class="lbl">1위 팀</span>
+            <span class="lbl" id="sTopLabel">1위 팀</span>
             <span class="val val-gold" id="sTop">–</span>
         </div>
     </div>
 
     <!-- Tabs -->
     <div class="tab-bar">
-        <button class="tab-btn active" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
-        <button class="tab-btn" data-tab="all" onclick="switchTab('all')">전체 랭킹</button>
+        <button class="tab-btn active" id="teamTabBtn" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
+        <button class="tab-btn" id="allTabBtn" data-tab="all" onclick="switchTab('all')">개인 랭킹</button>
     </div>
 
     <!-- Teams Tab -->
@@ -728,6 +733,7 @@
                         <th>이름</th>
                         <th>소속</th>
                         <th class="bar-cell"></th>
+                        <th class="numeric-cell" id="rankTotalLabel">누적 걸음수</th>
                         <th id="rankAvgLabel">하루 평균</th>
                     </tr>
                 </thead>
@@ -1121,6 +1127,10 @@ function updatePeriodUI() {
             : seasonStatus.status === 'active' ? '진행 중' : '종료';
         label.innerHTML = `${escapeHTML(seasonStatus.seasonName)}<span class="season-range">${escapeHTML(seasonStatus.startDate)} ~ ${escapeHTML(seasonStatus.endDate)} · ${statusText}</span>`;
         document.getElementById('sAvgLabel').textContent = '시즌 하루 평균';
+        document.getElementById('sTopLabel').textContent = '시즌 1위 팀';
+        document.getElementById('teamTabBtn').textContent = '시즌 팀 순위';
+        document.getElementById('allTabBtn').textContent = '시즌 개인 랭킹';
+        document.getElementById('rankTotalLabel').textContent = '시즌 누적';
         document.getElementById('rankAvgLabel').textContent = '시즌 하루 평균';
         updateSeasonNotice();
     } else {
@@ -1128,6 +1138,10 @@ function updatePeriodUI() {
         nextButton.style.display = 'flex';
         updateMonthUI();
         document.getElementById('sAvgLabel').textContent = '전체 하루 평균';
+        document.getElementById('sTopLabel').textContent = '월간 1위 팀';
+        document.getElementById('teamTabBtn').textContent = '월간 팀 순위';
+        document.getElementById('allTabBtn').textContent = '월간 개인 랭킹';
+        document.getElementById('rankTotalLabel').textContent = '월 누적';
         document.getElementById('rankAvgLabel').textContent = '하루 평균';
         document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
     }
@@ -1257,8 +1271,8 @@ function getTeamStats() {
             count++;
         });
         const avgDaily = count > 0 && days > 0 ? Math.floor(totalSteps / count / days) : 0;
-        return { ...team, avgDaily, memberCount: count };
-    }).sort((a, b) => b.avgDaily - a.avgDaily);
+        return { ...team, totalSteps, avgDaily, memberCount: count };
+    }).sort((a, b) => b.avgDaily - a.avgDaily || b.totalSteps - a.totalSteps);
 }
 
 /* ── Rendering ── */
@@ -1315,7 +1329,7 @@ function renderTeams() {
                 <div class="tc-rank ${rc}">${rank}</div>
                 <div class="tc-info">
                     <div class="tc-name">${escapeHTML(team.name)}</div>
-                    <div class="tc-meta">${team.memberCount}명</div>
+                    <div class="tc-meta">${team.memberCount}명 · ${viewMode === 'season' ? '시즌' : '월'} 누적 ${fmt(team.totalSteps)}보</div>
                 </div>
                 <div class="tc-avg">
                     <div class="tc-avg-num">${fmt(team.avgDaily)}</div>
@@ -1352,7 +1366,7 @@ function renderRanking(filter = '') {
         const avg = days > 0 ? Math.floor(total / days) : 0;
         rows.push({ name, avg, total, team: teamMap[name] || '-' });
     }
-    rows.sort((a, b) => b.avg - a.avg);
+    rows.sort((a, b) => b.total - a.total || b.avg - a.avg || a.name.localeCompare(b.name, 'ko'));
 
     if (filter) {
         rows = rows.filter(r => r.name.includes(filter));
@@ -1373,6 +1387,7 @@ function renderRanking(filter = '') {
             <td class="bar-cell">
                 <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
             </td>
+            <td class="numeric-cell">${fmt(r.total)}</td>
             <td style="font-weight:700;">${fmt(r.avg)}</td>
         </tr>`;
     }).join('');
