@@ -5,7 +5,7 @@
       "password": "admin"
     }
   ],
-  "lastUpdated": "2026-09-16T05:48:52.291Z",
+  "lastUpdated": "2026-09-16T07:58:03.253Z",
   "season": {
     "name": "2026 하반기 시즌",
     "startDate": "2026-09-01",
@@ -40,5 +40,9 @@
         "장순형"
       ]
     }
-  ]
+  ],
+  "display": {
+    "title": "만보 집계",
+    "theme": "light"
+  }
 }
