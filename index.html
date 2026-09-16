@@ -718,6 +718,7 @@ let config = { teams: [] };
 let latestData = [];
 let availableMonths = [];
 let currentMonthIdx = 0; // index into availableMonths
+let latestDataMonth = '';
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -727,6 +728,9 @@ async function init() {
     await loadAvailableMonths();
     currentMonthIdx = 0; // newest
     updateMonthUI();
+    if (getSelectedMonth() && getSelectedMonth() !== latestDataMonth) {
+        await loadMonthData();
+    }
     render();
 }
 
@@ -735,55 +739,210 @@ async function init() {
 async function loadConfig() {
     try {
         const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/config.json?t=${Date.now()}`;
-        const res = await fetch(url);
-        if (!res.ok) return;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        if (data.groups) {
-            config.teams = [];
-            data.groups.forEach(g => (g.teams || []).forEach(t => config.teams.push(t)));
-            config.admins = data.admins;
-        } else if (data.teams) {
-            config = data;
-        }
-    } catch(e) { console.error('config error', e); }
+        config = normalizeConfig(data);
+    } catch(e) {
+        config = { teams: [] };
+        console.error('config error', e);
+    }
 }
 
 async function loadLatestData() {
     try {
         const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv?t=${Date.now()}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const csv = await res.text();
-        latestData = parseCSV(csv);
+        latestData = normalizeStepRows(parseCSV(csv));
+        latestDataMonth = getDataMonth(latestData) || getCurrentKSTMonth();
         if (latestData.length && latestData[0]['크롤링일시']) {
             document.getElementById('updateTime').textContent = '업데이트 ' + latestData[0]['크롤링일시'];
         }
-    } catch(e) { console.error('latest error', e); }
+    } catch(e) {
+        latestData = [];
+        latestDataMonth = '';
+        document.getElementById('updateTime').textContent = '데이터를 불러오지 못했습니다.';
+        console.error('latest error', e);
+    }
 }
 
 async function loadAvailableMonths() {
+    const months = new Set();
+
     try {
-        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/daily`;
-        const res = await fetch(url);
-        if (!res.ok) return;
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/daily?ref=${encodeURIComponent(BRANCH)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        availableMonths = data
-            .filter(d => d.type === 'dir')
-            .map(d => d.name)
-            .sort()
-            .reverse();
-    } catch(e) { console.error('months error', e); }
+
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                if (item.type === 'dir' && parseMonthStr(item.name)) {
+                    months.add(item.name);
+                    return;
+                }
+
+                // 구버전 구조: data/daily/2026-09-15.csv
+                const match = item.type === 'file'
+                    ? item.name.match(/^(\d{4})-(\d{2})-\d{2}\.csv$/)
+                    : null;
+                if (match) months.add(`${Number(match[1])}년${Number(match[2])}월`);
+            });
+        }
+    } catch(e) {
+        // GitHub API 제한이 걸려도 latest.csv를 기준으로 페이지는 계속 동작한다.
+        console.error('months error', e);
+    }
+
+    if (latestDataMonth) months.add(latestDataMonth);
+    if (!months.size) months.add(getCurrentKSTMonth());
+
+    availableMonths = [...months].sort((a, b) => monthSortValue(b) - monthSortValue(a));
 }
 
 function parseCSV(csv) {
-    const lines = csv.trim().split('\n');
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
-        const vals = line.split(',');
+    if (typeof csv !== 'string' || !csv.trim()) return [];
+
+    // RFC 4180 방식의 쉼표/따옴표/줄바꿈을 처리한다.
+    const text = csv.replace(/^\uFEFF/, '');
+    const records = [];
+    let record = [];
+    let field = '';
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+
+        if (char === '"') {
+            if (quoted && text[i + 1] === '"') {
+                field += '"';
+                i++;
+            } else {
+                quoted = !quoted;
+            }
+        } else if (char === ',' && !quoted) {
+            record.push(field);
+            field = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+            if (char === '\r' && text[i + 1] === '\n') i++;
+            record.push(field);
+            if (record.some(value => String(value).trim() !== '')) records.push(record);
+            record = [];
+            field = '';
+        } else {
+            field += char;
+        }
+    }
+
+    record.push(field);
+    if (record.some(value => String(value).trim() !== '')) records.push(record);
+    if (records.length < 2) return [];
+
+    const headers = records.shift().map(header => String(header).replace(/^\uFEFF/, '').trim());
+    return records.map(values => {
         const row = {};
-        headers.forEach((h, i) => row[h.trim()] = (vals[i] || '').trim());
+        headers.forEach((header, index) => {
+            if (header) row[header] = String(values[index] ?? '').trim();
+        });
         return row;
     });
+}
+
+function normalizeConfig(data) {
+    const sourceTeams = Array.isArray(data?.groups)
+        ? data.groups.flatMap(group => Array.isArray(group?.teams) ? group.teams : [])
+        : Array.isArray(data?.teams) ? data.teams : [];
+
+    const teams = sourceTeams.map((team, index) => {
+        const members = Array.isArray(team?.members)
+            ? team.members.map(normalizeMemberName).filter(Boolean)
+            : [];
+        return {
+            ...team,
+            id: String(team?.id ?? `team-${index + 1}`),
+            name: String(team?.name ?? team?.['팀명'] ?? `팀 ${index + 1}`).trim(),
+            members: [...new Set(members)]
+        };
+    });
+
+    return { ...(data || {}), teams };
+}
+
+function normalizeMemberName(member) {
+    if (typeof member === 'string') return member.trim();
+    if (!member || typeof member !== 'object') return '';
+    return String(member.name ?? member['이름'] ?? member.displayName ?? '').trim();
+}
+
+function getField(row, aliases) {
+    for (const key of aliases) {
+        const value = row?.[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return String(value).trim();
+        }
+    }
+    return '';
+}
+
+function normalizeStepRows(rows) {
+    return rows.map(row => {
+        const monthlyTotal = getField(row, ['월누적', '월간누적', '월 누적', '월간 누적']);
+        return {
+            ...row,
+            '순위': getField(row, ['순위', 'rank', 'Rank']),
+            '이름': getField(row, ['이름', '성명', '닉네임', 'name', 'Name']),
+            '오늘걸음수': getField(row, ['오늘걸음수', '오늘 걸음수', '일일걸음수', '일일 걸음수']),
+            '월누적': monthlyTotal,
+            '월간누적': monthlyTotal,
+            '크롤링일시': getField(row, ['크롤링일시', '크롤링 일시', '수집일시', '업데이트일시'])
+        };
+    }).filter(row => row['이름']);
+}
+
+function toOptionalNumber(value) {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (value === undefined || value === null) return null;
+
+    const text = String(value).trim();
+    if (!text || /^(n\/?a|null|undefined|-)$/i.test(text)) return null;
+
+    const normalized = text.replace(/,/g, '').replace(/[^0-9.+-]/g, '');
+    if (!normalized) return null;
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+}
+
+function toNumber(value) {
+    return toOptionalNumber(value) ?? 0;
+}
+
+function getDataMonth(rows) {
+    const timestamp = rows?.[0]?.['크롤링일시'] || '';
+    const match = timestamp.match(/(\d{4})[-/.](\d{1,2})/);
+    return match ? `${Number(match[1])}년${Number(match[2])}월` : '';
+}
+
+function getKSTParts() {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return { year: Number(values.year), month: Number(values.month), day: Number(values.day) };
+}
+
+function getCurrentKSTMonth() {
+    const now = getKSTParts();
+    return `${now.year}년${now.month}월`;
+}
+
+function monthSortValue(monthString) {
+    const parsed = parseMonthStr(monthString);
+    return parsed ? parsed.year * 12 + parsed.month : 0;
 }
 
 /* ── Month Navigation ── */
@@ -802,10 +961,10 @@ function getDaysElapsed() {
     const ms = getSelectedMonth();
     const parsed = parseMonthStr(ms);
     if (!parsed) return 1;
-    const today = new Date();
-    const isCurrentMonth = (parsed.year === today.getFullYear() && parsed.month === today.getMonth() + 1);
+    const today = getKSTParts();
+    const isCurrentMonth = (parsed.year === today.year && parsed.month === today.month);
     if (isCurrentMonth) {
-        return today.getDate();
+        return today.day;
     } else {
         // 해당 월의 마지막 날
         return new Date(parsed.year, parsed.month, 0).getDate();
@@ -839,32 +998,47 @@ async function loadMonthData() {
     const parsed = parseMonthStr(ms);
     if (!parsed) return;
 
-    const today = new Date();
-    const isCurrentMonth = (parsed.year === today.getFullYear() && parsed.month === today.getMonth() + 1);
-
-    if (isCurrentMonth) {
-        // latest.csv 재사용
+    if (ms === latestDataMonth || (!latestDataMonth && ms === getCurrentKSTMonth())) {
+        // latest.csv가 실제로 담고 있는 월의 데이터
         await loadLatestData();
     } else {
-        // 해당 월 마지막 날 daily CSV에서 월누적 읽기
+        // 해당 월의 가장 최근 daily CSV에서 월누적 읽기
         const lastDay = new Date(parsed.year, parsed.month, 0).getDate();
         let loaded = false;
 
         // 마지막 날부터 역순으로 찾기
         for (let d = lastDay; d >= 1 && !loaded; d--) {
             const dateStr = `${parsed.year}-${String(parsed.month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/daily/${ms}/${dateStr}.csv`;
-            try {
-                const res = await fetch(url);
-                if (res.ok) {
-                    const csv = await res.text();
-                    latestData = parseCSV(csv);
-                    loaded = true;
+            const paths = [
+                `data/daily/${encodeURIComponent(ms)}/${dateStr}.csv`,
+                `data/daily/${dateStr}.csv` // 구버전 폴더 구조 호환
+            ];
+
+            for (const path of paths) {
+                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${path}?t=${Date.now()}`;
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (res.ok) {
+                        latestData = normalizeStepRows(parseCSV(await res.text()));
+                        if (latestData.length) {
+                            loaded = true;
+                            const timestamp = latestData[0]['크롤링일시'];
+                            document.getElementById('updateTime').textContent = timestamp
+                                ? '업데이트 ' + timestamp
+                                : '기준일 ' + dateStr;
+                            break;
+                        }
+                    }
+                } catch(e) {
+                    console.error(`daily data error: ${path}`, e);
                 }
-            } catch(e) {}
+            }
         }
 
-        if (!loaded) latestData = [];
+        if (!loaded) {
+            latestData = [];
+            document.getElementById('updateTime').textContent = '해당 월의 데이터가 없습니다.';
+        }
     }
 }
 
@@ -882,7 +1056,7 @@ function getMember(name) {
 
 function getMonthlyTotal(name) {
     const d = getMember(name);
-    return parseInt(d['월누적']) || parseInt(d['월간누적']) || 0;
+    return toNumber(d['월누적'] ?? d['월간누적']);
 }
 
 function getDailyAvg(name) {
@@ -920,7 +1094,7 @@ function renderSummary() {
 
     const days = getDaysElapsed();
     let totalSteps = 0;
-    data.forEach(d => totalSteps += parseInt(d['월누적']) || parseInt(d['월간누적']) || 0);
+    data.forEach(d => totalSteps += toNumber(d['월누적'] ?? d['월간누적']));
     const avg = data.length > 0 ? Math.floor(totalSteps / data.length / days) : 0;
     document.getElementById('sAvg').textContent = fmt(avg);
 
@@ -952,11 +1126,11 @@ function renderTeams() {
         }).sort((a, b) => b.avg - a.avg);
 
         return `
-        <div class="team-card" id="tc-${team.id}">
-            <div class="tc-header" onclick="toggleTC('${team.id}')">
+        <div class="team-card" id="tc-${escapeHTML(team.id)}">
+            <div class="tc-header" onclick="toggleTC(${actionArg(team.id)})">
                 <div class="tc-rank ${rc}">${rank}</div>
                 <div class="tc-info">
-                    <div class="tc-name">${team.name}</div>
+                    <div class="tc-name">${escapeHTML(team.name)}</div>
                     <div class="tc-meta">${team.memberCount}명</div>
                 </div>
                 <div class="tc-avg">
@@ -967,9 +1141,9 @@ function renderTeams() {
             </div>
             <div class="tc-body">
                 ${members.map((m, i) => `
-                <div class="mr" onclick="event.stopPropagation(); showDetail('${m.name}')">
+                <div class="mr" onclick="event.stopPropagation(); showDetail(${actionArg(m.name)})">
                     <span class="mr-idx">${i+1}</span>
-                    <span class="mr-name">${m.name}</span>
+                    <span class="mr-name">${escapeHTML(m.name)}</span>
                     <span class="mr-avg">${fmt(m.avg)}</span>
                     <span class="mr-total">누적 ${fmt(m.total)}</span>
                 </div>`).join('')}
@@ -1000,7 +1174,7 @@ function renderRanking(filter = '') {
         rows = rows.filter(r => r.name.includes(filter));
     }
 
-    const maxAvg = rows.length ? rows[0].avg : 1;
+    const maxAvg = rows.length ? Math.max(rows[0].avg, 1) : 1;
     const tbody = document.getElementById('rankBody');
 
     tbody.innerHTML = rows.map((r, i) => {
@@ -1008,10 +1182,10 @@ function renderRanking(filter = '') {
         const rc = rank === 1 ? 'rn1' : rank === 2 ? 'rn2' : rank === 3 ? 'rn3' : 'rnd';
         const pct = ((r.avg / maxAvg) * 100).toFixed(1);
         return `
-        <tr onclick="showDetail('${r.name}')">
+        <tr onclick="showDetail(${actionArg(r.name)})">
             <td><span class="rank-num ${rc}">${rank}</span></td>
-            <td><strong>${r.name}</strong></td>
-            <td style="color:var(--text-dim);font-size:0.78rem;">${r.team}</td>
+            <td><strong>${escapeHTML(r.name)}</strong></td>
+            <td style="color:var(--text-dim);font-size:0.78rem;">${escapeHTML(r.team)}</td>
             <td class="bar-cell">
                 <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
             </td>
@@ -1049,20 +1223,22 @@ async function showDetail(name) {
     const ms = getSelectedMonth();
     const parsed = parseMonthStr(ms);
     const monthStr2 = parsed ? `${parsed.year}년${parsed.month}월` : '';
-    const fileName = encodeURIComponent(`${name}_${monthStr2}_Data.csv`);
+    const fileName = encodeURIComponent(`${safeMemberFilename(name)}_${monthStr2}_Data.csv`);
     const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
 
     let history = [];
     try {
-        const res = await fetch(url);
-        if (res.ok) history = parseCSV(await res.text());
-    } catch(e) {}
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) history = normalizeHistoryRows(parseCSV(await res.text()));
+    } catch(e) {
+        console.error('member history error', e);
+    }
 
-    const dailySteps = history.map(h => parseInt(h['오늘걸음수']) || 0).filter(v => v > 0);
+    const dailySteps = history.map(h => toOptionalNumber(h['오늘걸음수'])).filter(v => v !== null && v > 0);
     const maxSteps = dailySteps.length ? Math.max(...dailySteps) : 0;
     const minSteps = dailySteps.length ? Math.min(...dailySteps) : 0;
-    const maxDay = history.find(h => parseInt(h['오늘걸음수']) === maxSteps)?.['날짜'] || '-';
-    const minDay = history.find(h => parseInt(h['오늘걸음수']) === minSteps)?.['날짜'] || '-';
+    const maxDay = history.find(h => toOptionalNumber(h['오늘걸음수']) === maxSteps)?.['날짜'] || '-';
+    const minDay = history.find(h => toOptionalNumber(h['오늘걸음수']) === minSteps)?.['날짜'] || '-';
 
     bd.innerHTML = `
         <div class="stat-grid">
@@ -1096,9 +1272,12 @@ async function showDetail(name) {
 
 function renderCalendar(year, month, history) {
     const grid = document.getElementById('calGrid');
-    const today = new Date();
+    const today = getKSTParts();
     const hmap = {};
-    history.forEach(h => hmap[h['날짜']] = parseInt(h['오늘걸음수']) || 0);
+    history.forEach(h => {
+        const steps = toOptionalNumber(h['오늘걸음수']);
+        if (h['날짜'] && steps !== null) hmap[h['날짜']] = steps;
+    });
 
     const dayNames = ['일','월','화','수','목','금','토'];
     let html = dayNames.map(d => `<div class="cal-hd">${d}</div>`).join('');
@@ -1111,7 +1290,7 @@ function renderCalendar(year, month, history) {
     for (let d = 1; d <= lastDate; d++) {
         const ds = `${String(month+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
         const steps = hmap[ds];
-        const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
+        const isToday = (year === today.year && month + 1 === today.month && d === today.day);
         const has = steps !== undefined;
         html += `<div class="cal-day ${isToday ? 'today' : ''} ${has ? 'has' : ''}">
             <span class="dn">${d}</span>
@@ -1129,7 +1308,42 @@ function closeModal() {
 /* ── Utils ── */
 
 function fmt(n) {
-    return (n || 0).toLocaleString('ko-KR');
+    const value = toNumber(n);
+    return value.toLocaleString('ko-KR');
+}
+
+function normalizeHistoryRows(rows) {
+    return rows.map(row => ({
+        ...row,
+        '날짜': normalizeHistoryDate(getField(row, ['날짜', '일자', 'date', 'Date'])),
+        '오늘걸음수': getField(row, ['오늘걸음수', '오늘 걸음수', '일일걸음수', '일일 걸음수']),
+        '월누적': getField(row, ['월누적', '월간누적', '월 누적', '월간 누적'])
+    })).filter(row => row['날짜']);
+}
+
+function normalizeHistoryDate(value) {
+    const text = String(value || '').trim();
+    let match = text.match(/^\d{4}[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    if (!match) match = text.match(/^(\d{1,2})[-/.](\d{1,2})$/);
+    if (!match) return text;
+    return `${String(Number(match[1])).padStart(2, '0')}/${String(Number(match[2])).padStart(2, '0')}`;
+}
+
+function safeMemberFilename(name) {
+    return String(name).replace(/[\\/:*?"<>|]/g, '_');
+}
+
+function escapeHTML(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function actionArg(value) {
+    return escapeHTML(JSON.stringify(String(value ?? '')));
 }
 </script>
 </body>
