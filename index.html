@@ -1238,20 +1238,7 @@ function getSeasonUnavailableMessage() {
 
 function updateSeasonNotice() {
     const notice = document.getElementById('dataNotice');
-    const missingCount = Array.isArray(seasonStatus.missingDates) ? seasonStatus.missingDates.length : 0;
-    const unknownCount = toNumber(seasonStatus.unknownValueCount);
-
-    if (seasonStatus.status === 'before') {
-        notice.textContent = `📅 ${seasonStatus.startDate}부터 시즌 집계를 시작합니다.`;
-    } else if (seasonStatus.status === 'ended') {
-        notice.textContent = `🏁 시즌이 종료되어 ${seasonStatus.endDate} 기준 결과로 고정되었습니다.`;
-    } else {
-        notice.textContent = `🚶 시즌 집계 중 · 기준일 ${seasonStatus.asOfDate || '-'} · ${seasonStatus.availableDays}/${seasonStatus.expectedDays}일 데이터 반영`;
-    }
-
-    if (missingCount || unknownCount) {
-        notice.textContent += ` · ⚠️ 누락 날짜 ${missingCount}일, 미확정 값 ${unknownCount}건`;
-    }
+    notice.textContent = `📅 시즌 집계 기간: ${seasonStatus.startDate} ~ ${seasonStatus.endDate}`;
 }
 
 async function switchViewMode(mode) {
