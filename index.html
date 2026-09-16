@@ -153,7 +153,7 @@
         .view-switch {
             display: flex;
             width: fit-content;
-            margin: 0 12px 14px;
+            margin: 0 0 8px;
             padding: 3px;
             gap: 3px;
             border: 1px solid var(--border);
@@ -175,6 +175,29 @@
         .view-switch button.active {
             color: #fff;
             background: var(--accent);
+        }
+
+        .view-switch button.unavailable:not(.active) {
+            opacity: 0.55;
+        }
+
+        .control-label {
+            margin: 0 0 7px;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .period-help {
+            min-height: 18px;
+            margin-bottom: 14px;
+            color: var(--text-dim);
+            font-size: 0.72rem;
+        }
+
+        .period-help.warning {
+            color: var(--gold);
         }
 
         /* ── Notice ── */
@@ -681,10 +704,12 @@
         ⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.
     </div>
 
-    <div class="view-switch" id="viewSwitch" style="display:none;">
-        <button id="seasonViewBtn" onclick="switchViewMode('season')">시즌 랭킹</button>
-        <button id="monthlyViewBtn" onclick="switchViewMode('monthly')">월간 랭킹</button>
+    <div class="control-label">집계 기준</div>
+    <div class="view-switch" id="viewSwitch">
+        <button id="seasonViewBtn" onclick="switchViewMode('season')">시즌별</button>
+        <button id="monthlyViewBtn" onclick="switchViewMode('monthly')">월별</button>
     </div>
+    <div class="period-help" id="periodHelp"></div>
 
     <!-- Month Nav -->
     <div class="month-nav">
@@ -710,6 +735,7 @@
     </div>
 
     <!-- Tabs -->
+    <div class="control-label">순위 구분</div>
     <div class="tab-bar">
         <button class="tab-btn active" id="teamTabBtn" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
         <button class="tab-btn" id="allTabBtn" data-tab="all" onclick="switchTab('all')">개인 랭킹</button>
@@ -780,7 +806,6 @@ async function init() {
 
     if (hasSeasonView()) {
         viewMode = 'season';
-        document.getElementById('viewSwitch').style.display = 'flex';
     } else if (getSelectedMonth() && getSelectedMonth() !== latestDataMonth) {
         await loadMonthData();
     }
@@ -1115,9 +1140,17 @@ function updatePeriodUI() {
     const label = document.getElementById('monthLabel');
     const seasonButton = document.getElementById('seasonViewBtn');
     const monthlyButton = document.getElementById('monthlyViewBtn');
+    const periodHelp = document.getElementById('periodHelp');
+    const seasonAvailable = hasSeasonView();
 
     seasonButton.classList.toggle('active', viewMode === 'season');
     monthlyButton.classList.toggle('active', viewMode === 'monthly');
+    seasonButton.classList.toggle('unavailable', !seasonAvailable);
+    seasonButton.title = seasonAvailable ? '설정된 시즌 전체 순위를 조회합니다.' : getSeasonUnavailableMessage();
+    periodHelp.classList.toggle('warning', !seasonAvailable);
+    periodHelp.textContent = seasonAvailable
+        ? '시즌 전체 또는 월별 기록을 선택해 조회할 수 있습니다.'
+        : getSeasonUnavailableMessage();
 
     if (viewMode === 'season' && hasSeasonView()) {
         prevButton.style.display = 'none';
@@ -1147,6 +1180,21 @@ function updatePeriodUI() {
     }
 }
 
+function getSeasonUnavailableMessage() {
+    if (seasonStatus?.status === 'invalid') {
+        return `시즌 설정 오류: ${seasonStatus.message || '관리자 설정을 확인하세요.'}`;
+    }
+    if (seasonStatus?.status === 'not_configured') {
+        return '시즌별 집계를 사용하려면 관리자 페이지에서 시즌 기간을 설정하세요.';
+    }
+
+    const season = config?.season || {};
+    if (season.name && season.startDate && season.endDate) {
+        return '시즌 설정은 저장됐지만 집계 데이터가 아직 없습니다. crawler를 한 번 실행하세요.';
+    }
+    return '시즌별 집계를 사용하려면 관리자 페이지에서 시즌 기간을 설정하세요.';
+}
+
 function updateSeasonNotice() {
     const notice = document.getElementById('dataNotice');
     const missingCount = Array.isArray(seasonStatus.missingDates) ? seasonStatus.missingDates.length : 0;
@@ -1166,7 +1214,14 @@ function updateSeasonNotice() {
 }
 
 async function switchViewMode(mode) {
-    if (mode === 'season' && !hasSeasonView()) return;
+    if (mode === 'season' && !hasSeasonView()) {
+        const message = getSeasonUnavailableMessage();
+        const periodHelp = document.getElementById('periodHelp');
+        periodHelp.textContent = message;
+        periodHelp.classList.add('warning');
+        document.getElementById('dataNotice').textContent = `⚠️ ${message}`;
+        return;
+    }
     if (mode === viewMode) return;
 
     viewMode = mode;
