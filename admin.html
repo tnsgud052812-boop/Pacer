@@ -374,6 +374,35 @@
             padding: 10px;
         }
 
+        .selected-member-summary {
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .selected-member-count {
+            display: block;
+            margin-bottom: 8px;
+            color: #a5b4fc;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .selected-member-names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 92px;
+            overflow-y: auto;
+        }
+
+        .selected-member-empty {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
         .member-checkbox {
             display: flex;
             align-items: center;
@@ -595,12 +624,13 @@
                 <button class="modal-close" onclick="closeModal('teamModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group" id="teamNameGroup">
                     <label class="form-label">팀 이름</label>
                     <input type="text" class="form-input" id="teamName" placeholder="예: 기술표준팀">
                 </div>
                 <div class="form-group">
                     <label class="form-label">팀원 선택</label>
+                    <div class="selected-member-summary" id="selectedMemberSummary"></div>
                     <div class="search-box">
                         <input type="text" class="search-input" id="memberSearch" placeholder="이름 검색..." oninput="filterMembers()">
                     </div>
@@ -667,6 +697,11 @@
             await Promise.all([loadAllMembers(), loadConfig()]);
             syncAllMembers();
             checkLogin();
+        });
+
+        // 브라우저 뒤로가기로 잠금이 풀린 화면이 복원되는 경우에도 다시 인증한다.
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) resetLoginGate();
         });
 
         window.addEventListener('beforeunload', event => {
@@ -739,11 +774,16 @@
         }
 
         function checkLogin() {
-            if (!configLoaded) return;
-            const savedUser = sessionStorage.getItem('adminUser');
-            const accountExists = getAdminAccounts().some(admin => admin.id === savedUser);
-            if (savedUser && accountExists) showMain();
-            else sessionStorage.removeItem('adminUser');
+            resetLoginGate();
+        }
+
+        function resetLoginGate() {
+            sessionStorage.removeItem('adminUser');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPw').value = '';
+            document.getElementById('loginError').style.display = 'none';
         }
 
         function doLogin() {
@@ -764,7 +804,6 @@
                 return;
             }
 
-            sessionStorage.setItem('adminUser', id);
             document.getElementById('loginPw').value = '';
             error.style.display = 'none';
             showMain();
@@ -778,8 +817,7 @@
         function doLogout() {
             if (hasChanges && !confirm('저장하지 않은 변경 내용이 있습니다. 로그아웃하시겠습니까?')) return;
             hasChanges = false;
-            sessionStorage.removeItem('adminUser');
-            location.reload();
+            resetLoginGate();
         }
 
         function setConfigStatus(message, type = '') {
@@ -1041,7 +1079,7 @@
             closeModal('groupModal');
 
             if (isNewGroup) {
-                showToast('그룹이 추가되었습니다. 첫 팀과 팀원을 등록하세요.', 'success');
+                showToast('그룹이 추가되었습니다. 팀원을 등록하세요.', 'success');
                 setTimeout(() => showAddTeamModal(savedGroupId, true), 0);
             } else {
                 showToast('그룹이 저장되었습니다', 'success');
@@ -1060,10 +1098,12 @@
 
         // 팀 추가 모달
         function showAddTeamModal(groupId, isFirstTeam = false) {
+            const group = config.groups.find(g => g.id === groupId);
             editingTeamId = null;
             editingGroupIdForTeam = groupId;
-            document.getElementById('teamModalTitle').textContent = isFirstTeam ? '첫 팀 및 팀원 등록' : '팀 추가';
-            document.getElementById('teamName').value = '';
+            document.getElementById('teamModalTitle').textContent = isFirstTeam ? '팀원 등록' : '팀 추가';
+            document.getElementById('teamNameGroup').style.display = isFirstTeam ? 'none' : 'block';
+            document.getElementById('teamName').value = isFirstTeam ? (group?.name || '') : '';
             document.getElementById('memberSearch').value = '';
             renderMemberCheckboxes([]);
             document.getElementById('teamModal').classList.add('active');
@@ -1078,6 +1118,7 @@
             editingTeamId = teamId;
             editingGroupIdForTeam = groupId;
             document.getElementById('teamModalTitle').textContent = '팀 수정';
+            document.getElementById('teamNameGroup').style.display = 'block';
             document.getElementById('teamName').value = team.name;
             document.getElementById('memberSearch').value = '';
             renderMemberCheckboxes(team.members || []);
@@ -1124,6 +1165,22 @@
                     </label>
                 `;
             }).join('');
+            renderSelectedMemberSummary();
+        }
+
+        function renderSelectedMemberSummary() {
+            const container = document.getElementById('selectedMemberSummary');
+            const selected = [...currentSelectedMembers].sort((a, b) => a.localeCompare(b, 'ko'));
+            const names = selected.length
+                ? `<div class="selected-member-names">${selected.map(name =>
+                    `<span class="member-tag">${escapeHTML(name)}</span>`
+                ).join('')}</div>`
+                : '<span class="selected-member-empty">선택한 팀원이 없습니다.</span>';
+
+            container.innerHTML = `
+                <span class="selected-member-count">현재 선택 ${selected.length}명</span>
+                ${names}
+            `;
         }
 
         // 멤버 선택 토글
@@ -1133,6 +1190,7 @@
             } else {
                 currentSelectedMembers.delete(member);
             }
+            renderSelectedMemberSummary();
         }
 
         // 멤버 필터
