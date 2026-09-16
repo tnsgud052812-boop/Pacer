@@ -6,6 +6,7 @@ Pacer의 월 누적 걸음수를 수집하고, 전날 스냅샷과 비교해 당
 """
 
 import csv
+import json
 import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -61,6 +62,23 @@ def parse_integer(value) -> int:
     cleaned = re.sub(r"[^0-9.-]", "", str(value))
     if not cleaned:
         return 0
+    return int(float(cleaned))
+
+
+def parse_optional_integer(value) -> Optional[int]:
+    """빈 값이나 N/A는 None으로, 숫자 값은 정수로 변환."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+
+    text = str(value).strip()
+    if not text or text.lower() in {"n/a", "na", "null", "none", "-"}:
+        return None
+
+    cleaned = re.sub(r"[^0-9.-]", "", text)
+    if not cleaned:
+        return None
     return int(float(cleaned))
 
 
@@ -304,6 +322,251 @@ def save_latest(members: List[Dict], crawl_time: datetime):
     print("latest.csv 저장 완료")
 
 
+def load_season_config() -> Optional[Dict]:
+    """config.json에서 시즌 설정을 읽고 날짜를 검증."""
+    config_path = DATA_DIR / "config.json"
+    if not config_path.exists():
+        return None
+
+    try:
+        with config_path.open("r", encoding="utf-8-sig") as f:
+            config = json.load(f)
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"시즌 설정 파일 로드 실패 ({config_path}): {error}") from error
+
+    season = config.get("season")
+    if not isinstance(season, dict):
+        return None
+
+    name = str(season.get("name", "")).strip()
+    start_text = str(season.get("startDate", "")).strip()
+    end_text = str(season.get("endDate", "")).strip()
+
+    if not any((name, start_text, end_text)):
+        return None
+    if not all((name, start_text, end_text)):
+        raise ValueError("시즌명, 시작일, 종료일을 모두 설정해야 합니다.")
+
+    try:
+        start_date = date.fromisoformat(start_text)
+        end_date = date.fromisoformat(end_text)
+    except ValueError as error:
+        raise ValueError("시즌 날짜는 YYYY-MM-DD 형식이어야 합니다.") from error
+
+    if end_date < start_date:
+        raise ValueError("시즌 종료일은 시작일보다 빠를 수 없습니다.")
+
+    return {
+        "name": name,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+
+def iter_dates(start_date: date, end_date: date):
+    """양 끝 날짜를 포함해 하루씩 반환."""
+    current = start_date
+    while current <= end_date:
+        yield current
+        current += timedelta(days=1)
+
+
+def load_daily_steps(snapshot_date: date):
+    """일별 스냅샷에서 멤버별 당일 걸음수 로드."""
+    filename = daily_snapshot_path(snapshot_date)
+    if not filename.exists():
+        return None
+
+    steps = {}
+    unknown_names = []
+    try:
+        with filename.open("r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                name = str(row.get("이름", row.get("성명", ""))).strip()
+                if not name:
+                    continue
+
+                raw_steps = row.get(
+                    "오늘걸음수",
+                    row.get("오늘 걸음수", row.get("일일걸음수", row.get("일일 걸음수", ""))),
+                )
+                daily_steps = parse_optional_integer(raw_steps)
+                if daily_steps is None or daily_steps < 0:
+                    unknown_names.append(name)
+                    continue
+                steps[name] = daily_steps
+    except (OSError, ValueError, csv.Error) as error:
+        raise RuntimeError(f"일별 시즌 데이터 로드 실패 ({filename}): {error}") from error
+
+    return steps, unknown_names
+
+
+def write_season_files(rows: List[Dict], status_data: Dict, crawl_time: datetime):
+    """시즌 누적 CSV와 상태 JSON 저장."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    crawl_time_str = crawl_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    csv_path = DATA_DIR / "season.csv"
+    with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "순위",
+            "이름",
+            "시즌누적",
+            "하루평균",
+            "집계일수",
+            "시즌명",
+            "시작일",
+            "종료일",
+            "집계기준일",
+            "생성일시",
+        ])
+        for row in rows:
+            writer.writerow([
+                row["rank"],
+                row["name"],
+                row["season_total"],
+                row["daily_average"],
+                row["elapsed_days"],
+                status_data.get("seasonName", ""),
+                status_data.get("startDate", ""),
+                status_data.get("endDate", ""),
+                status_data.get("asOfDate") or "",
+                crawl_time_str,
+            ])
+
+    status_path = DATA_DIR / "season_status.json"
+    with status_path.open("w", encoding="utf-8") as f:
+        json.dump(status_data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+
+    print(f"시즌 CSV 저장: {csv_path}")
+    print(f"시즌 상태 저장: {status_path}")
+
+
+def rebuild_season_summary(
+    run_date: date,
+    crawl_time: datetime,
+    current_member_names: List[str],
+):
+    """설정된 시즌 기간의 일별 CSV를 다시 합산해 시즌 집계를 생성."""
+    generated_at = crawl_time.isoformat()
+
+    try:
+        season = load_season_config()
+    except (RuntimeError, ValueError) as error:
+        status_data = {
+            "version": 1,
+            "status": "invalid",
+            "message": str(error),
+            "seasonName": "",
+            "startDate": "",
+            "endDate": "",
+            "asOfDate": None,
+            "expectedDays": 0,
+            "availableDays": 0,
+            "missingDates": [],
+            "unknownValueCount": 0,
+            "unknownDates": [],
+            "complete": False,
+            "generatedAt": generated_at,
+        }
+        write_season_files([], status_data, crawl_time)
+        print(f"⚠️ 시즌 설정 오류: {error}")
+        return
+
+    if season is None:
+        status_data = {
+            "version": 1,
+            "status": "not_configured",
+            "message": "시즌이 설정되지 않았습니다.",
+            "seasonName": "",
+            "startDate": "",
+            "endDate": "",
+            "asOfDate": None,
+            "expectedDays": 0,
+            "availableDays": 0,
+            "missingDates": [],
+            "unknownValueCount": 0,
+            "unknownDates": [],
+            "complete": True,
+            "generatedAt": generated_at,
+        }
+        write_season_files([], status_data, crawl_time)
+        print("시즌 설정 없음: 월간 집계만 유지합니다.")
+        return
+
+    start_date = season["start_date"]
+    end_date = season["end_date"]
+    totals = {name: 0 for name in current_member_names if name}
+    missing_dates = []
+    unknown_dates = set()
+    unknown_value_count = 0
+    available_days = 0
+
+    if run_date < start_date:
+        season_status = "before"
+        effective_date = None
+        expected_dates = []
+    else:
+        effective_date = min(run_date, end_date)
+        season_status = "active" if run_date <= end_date else "ended"
+        expected_dates = list(iter_dates(start_date, effective_date))
+
+    for snapshot_date in expected_dates:
+        daily_result = load_daily_steps(snapshot_date)
+        if daily_result is None:
+            missing_dates.append(snapshot_date.isoformat())
+            continue
+
+        available_days += 1
+        daily_steps, unknown_names = daily_result
+        if unknown_names:
+            unknown_dates.add(snapshot_date.isoformat())
+            unknown_value_count += len(unknown_names)
+
+        for name, steps in daily_steps.items():
+            totals[name] = totals.get(name, 0) + steps
+
+    elapsed_days = len(expected_dates)
+    sorted_totals = sorted(totals.items(), key=lambda item: (-item[1], item[0]))
+    rows = [
+        {
+            "rank": rank,
+            "name": name,
+            "season_total": total,
+            "daily_average": total // elapsed_days if elapsed_days else 0,
+            "elapsed_days": elapsed_days,
+        }
+        for rank, (name, total) in enumerate(sorted_totals, 1)
+    ]
+
+    complete = not missing_dates and unknown_value_count == 0
+    status_data = {
+        "version": 1,
+        "status": season_status,
+        "message": "" if complete else "일부 날짜 또는 걸음수 데이터가 누락되었습니다.",
+        "seasonName": season["name"],
+        "startDate": start_date.isoformat(),
+        "endDate": end_date.isoformat(),
+        "asOfDate": effective_date.isoformat() if effective_date else None,
+        "expectedDays": elapsed_days,
+        "availableDays": available_days,
+        "missingDates": missing_dates,
+        "unknownValueCount": unknown_value_count,
+        "unknownDates": sorted(unknown_dates),
+        "complete": complete,
+        "generatedAt": generated_at,
+    }
+    write_season_files(rows, status_data, crawl_time)
+
+    print(
+        f"시즌 집계 완료: {season['name']} / 상태={season_status} / "
+        f"집계일={available_days}/{elapsed_days} / 인원={len(rows)}명"
+    )
+
+
 def calculate_daily_steps(
     today_data: List[Dict],
     previous_day_data: Dict[str, int],
@@ -418,7 +681,14 @@ def main():
     # 6. latest.csv 저장
     save_latest(daily_data, now)
 
-    # 7. 요약 출력
+    # 7. 설정된 시즌 범위를 기존 일별 CSV로 재합산
+    rebuild_season_summary(
+        run_date=run_date,
+        crawl_time=now,
+        current_member_names=[m["name"] for m in daily_data],
+    )
+
+    # 8. 요약 출력
     print_summary(daily_data, run_date)
 
 
