@@ -18,6 +18,72 @@
             color: #eee;
         }
 
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .login-box h1 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .login-box .subtitle {
+            margin-bottom: 30px;
+            color: #888;
+        }
+
+        .login-input {
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 14px 16px;
+            color: #fff;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 14px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .login-error {
+            display: none;
+            margin-top: 15px;
+            color: #f87171;
+            font-size: 0.9rem;
+        }
+
         /* 메인 레이아웃 */
         .container {
             max-width: 1200px;
@@ -404,12 +470,25 @@
     </style>
 </head>
 <body>
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1>🔐 관리자 로그인</h1>
+            <p class="subtitle">캔탑스 만보걷기 관리</p>
+            <input type="text" class="login-input" id="loginId" placeholder="아이디" autocomplete="username">
+            <input type="password" class="login-input" id="loginPw" placeholder="비밀번호"
+                autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="login-btn" onclick="doLogin()">로그인</button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
     <!-- 메인 콘텐츠 -->
-    <div class="container content-wrapper" id="mainContent">
+    <div class="container content-wrapper" id="mainContent" style="display:none;">
         <div class="header">
             <h1>⚙️ 관리자 페이지</h1>
             <div class="header-btns">
                 <button class="btn" onclick="location.href='index.html'">📊 메인으로</button>
+                <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
             </div>
         </div>
 
@@ -532,6 +611,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([loadAllMembers(), loadConfig()]);
             syncAllMembers();
+            checkLogin();
         });
 
         window.addEventListener('beforeunload', event => {
@@ -591,6 +671,59 @@
                     'error'
                 );
             }
+        }
+
+        function getAdminAccounts() {
+            const additionalAdmins = Array.isArray(config.admins)
+                ? config.admins.filter(admin => admin?.id && admin.id !== 'admin')
+                : [];
+
+            // 정적 페이지의 접근 관문용 기본 계정. 실제 GitHub 쓰기 권한은 PAT가 결정한다.
+            return [{ id: 'admin', password: 'admin' }, ...additionalAdmins];
+        }
+
+        function checkLogin() {
+            if (!configLoaded) return;
+            const savedUser = sessionStorage.getItem('adminUser');
+            const accountExists = getAdminAccounts().some(admin => admin.id === savedUser);
+            if (savedUser && accountExists) showMain();
+            else sessionStorage.removeItem('adminUser');
+        }
+
+        function doLogin() {
+            const error = document.getElementById('loginError');
+            if (!configLoaded) {
+                error.textContent = '설정 파일을 불러오지 못해 로그인할 수 없습니다.';
+                error.style.display = 'block';
+                return;
+            }
+
+            const id = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPw').value;
+            const matched = getAdminAccounts().some(admin => admin.id === id && admin.password === password);
+
+            if (!matched) {
+                error.textContent = '아이디 또는 비밀번호가 틀렸습니다.';
+                error.style.display = 'block';
+                return;
+            }
+
+            sessionStorage.setItem('adminUser', id);
+            document.getElementById('loginPw').value = '';
+            error.style.display = 'none';
+            showMain();
+        }
+
+        function showMain() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        function doLogout() {
+            if (hasChanges && !confirm('저장하지 않은 변경 내용이 있습니다. 로그아웃하시겠습니까?')) return;
+            hasChanges = false;
+            sessionStorage.removeItem('adminUser');
+            location.reload();
         }
 
         function setConfigStatus(message, type = '') {
