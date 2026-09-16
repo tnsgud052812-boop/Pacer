@@ -334,6 +334,37 @@
             background: #1a1a2e;
         }
 
+        .season-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.4fr) minmax(160px, 1fr) minmax(160px, 1fr);
+            gap: 12px;
+        }
+
+        .season-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .season-validation {
+            margin-top: 12px;
+            color: #999;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .season-validation.success {
+            color: #6ee7b7;
+        }
+
+        .season-validation.error {
+            color: #fca5a5;
+        }
+
+        @media (max-width: 760px) {
+            .season-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* 멤버 선택 */
         .member-select-list {
             max-height: 250px;
@@ -498,6 +529,30 @@
         <div class="tab-content editor-disabled" id="groupsTab">
             <div class="card">
                 <div class="card-header">
+                    <span class="card-title">📅 시즌 집계 기간</span>
+                </div>
+                <div class="season-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="seasonName">시즌명</label>
+                        <input type="text" class="form-input" id="seasonName"
+                            placeholder="예: 2026년 하반기 만보 대항전" oninput="updateSeasonSettings()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="seasonStartDate">시작일</label>
+                        <input type="date" class="form-input" id="seasonStartDate" onchange="updateSeasonSettings()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="seasonEndDate">종료일</label>
+                        <input type="date" class="form-input" id="seasonEndDate" onchange="updateSeasonSettings()">
+                    </div>
+                </div>
+                <div class="season-validation" id="seasonValidation">
+                    시작일과 종료일을 설정하면 해당 기간만 집계합니다.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
                     <span class="card-title">📋 그룹 목록</span>
                     <button class="btn btn-primary" onclick="showAddGroupModal()">+ 그룹 추가</button>
                 </div>
@@ -527,7 +582,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn" onclick="closeModal('groupModal')">취소</button>
-                <button class="btn btn-primary" onclick="saveGroup()">저장</button>
+                <button class="btn btn-primary" id="groupSaveBtn" onclick="saveGroup()">저장 후 팀 등록</button>
             </div>
         </div>
     </div>
@@ -657,6 +712,7 @@
                 hasChanges = false;
                 document.getElementById('saveBar').style.display = 'none';
                 syncAllMembers();
+                renderSeasonSettings();
                 renderGroups();
                 setEditorEnabled(true);
                 setConfigStatus('설정을 정상적으로 불러왔습니다. 저장할 때 GitHub 토큰으로 인증합니다.', 'success');
@@ -742,6 +798,13 @@
             }
 
             const normalized = { ...data };
+            const season = data.season && typeof data.season === 'object' ? data.season : {};
+            normalized.season = {
+                ...season,
+                name: String(season.name ?? '').trim(),
+                startDate: String(season.startDate ?? '').trim(),
+                endDate: String(season.endDate ?? '').trim()
+            };
             normalized.groups = Array.isArray(data.groups) ? data.groups.map((group, groupIndex) => ({
                 ...group,
                 id: String(group?.id ?? `group-${groupIndex + 1}`),
@@ -757,6 +820,58 @@
             })) : [];
 
             return normalized;
+        }
+
+        function renderSeasonSettings() {
+            const season = config.season || {};
+            document.getElementById('seasonName').value = season.name || '';
+            document.getElementById('seasonStartDate').value = season.startDate || '';
+            document.getElementById('seasonEndDate').value = season.endDate || '';
+            validateSeasonSettings(false);
+        }
+
+        function updateSeasonSettings() {
+            if (!configLoaded) return;
+            config.season = {
+                ...(config.season || {}),
+                name: document.getElementById('seasonName').value.trim(),
+                startDate: document.getElementById('seasonStartDate').value,
+                endDate: document.getElementById('seasonEndDate').value
+            };
+            validateSeasonSettings(false);
+            markChanged();
+        }
+
+        function validateSeasonSettings(showErrorToast = false) {
+            const season = config.season || {};
+            const name = String(season.name || '').trim();
+            const startDate = String(season.startDate || '').trim();
+            const endDate = String(season.endDate || '').trim();
+            const validation = document.getElementById('seasonValidation');
+
+            let message = '시작일과 종료일을 설정하면 해당 기간만 집계합니다.';
+            let type = '';
+            let valid = true;
+
+            if (name || startDate || endDate) {
+                if (!name || !startDate || !endDate) {
+                    valid = false;
+                    type = 'error';
+                    message = '시즌명, 시작일, 종료일을 모두 입력해야 합니다.';
+                } else if (endDate < startDate) {
+                    valid = false;
+                    type = 'error';
+                    message = '종료일은 시작일보다 빠를 수 없습니다.';
+                } else {
+                    type = 'success';
+                    message = `${startDate}부터 ${endDate}까지 양 끝 날짜를 포함하여 집계합니다.`;
+                }
+            }
+
+            validation.textContent = message;
+            validation.className = `season-validation ${type}`.trim();
+            if (!valid && showErrorToast) showToast(message, 'error');
+            return valid;
         }
 
         function normalizeMemberName(member) {
@@ -881,6 +996,7 @@
         function showAddGroupModal() {
             editingGroupId = null;
             document.getElementById('groupModalTitle').textContent = '그룹 추가';
+            document.getElementById('groupSaveBtn').textContent = '저장 후 팀 등록';
             document.getElementById('groupName').value = '';
             document.getElementById('groupModal').classList.add('active');
         }
@@ -892,6 +1008,7 @@
             
             editingGroupId = groupId;
             document.getElementById('groupModalTitle').textContent = '그룹 수정';
+            document.getElementById('groupSaveBtn').textContent = '저장';
             document.getElementById('groupName').value = group.name;
             document.getElementById('groupModal').classList.add('active');
         }
@@ -904,12 +1021,16 @@
                 return;
             }
             
-            if (editingGroupId) {
+            const isNewGroup = !editingGroupId;
+            let savedGroupId = editingGroupId;
+
+            if (!isNewGroup) {
                 const group = config.groups.find(g => g.id === editingGroupId);
                 if (group) group.name = name;
             } else {
+                savedGroupId = 'group' + Date.now();
                 config.groups.push({
-                    id: 'group' + Date.now(),
+                    id: savedGroupId,
                     name: name,
                     teams: []
                 });
@@ -918,7 +1039,13 @@
             markChanged();
             renderGroups();
             closeModal('groupModal');
-            showToast('그룹이 저장되었습니다', 'success');
+
+            if (isNewGroup) {
+                showToast('그룹이 추가되었습니다. 첫 팀과 팀원을 등록하세요.', 'success');
+                setTimeout(() => showAddTeamModal(savedGroupId, true), 0);
+            } else {
+                showToast('그룹이 저장되었습니다', 'success');
+            }
         }
 
         // 그룹 삭제
@@ -932,10 +1059,10 @@
         }
 
         // 팀 추가 모달
-        function showAddTeamModal(groupId) {
+        function showAddTeamModal(groupId, isFirstTeam = false) {
             editingTeamId = null;
             editingGroupIdForTeam = groupId;
-            document.getElementById('teamModalTitle').textContent = '팀 추가';
+            document.getElementById('teamModalTitle').textContent = isFirstTeam ? '첫 팀 및 팀원 등록' : '팀 추가';
             document.getElementById('teamName').value = '';
             document.getElementById('memberSearch').value = '';
             renderMemberCheckboxes([]);
@@ -1087,6 +1214,7 @@
                 showToast('저장할 변경 내용이 없습니다.');
                 return;
             }
+            if (!validateSeasonSettings(true)) return;
 
             const input = document.getElementById('githubToken');
             input.value = '';
@@ -1103,6 +1231,7 @@
         // GitHub의 현재 설정과 처음 읽은 설정이 같은 경우에만 저장한다.
         async function confirmSaveConfig() {
             if (saveInProgress || !configLoaded || !hasChanges) return;
+            if (!validateSeasonSettings(true)) return;
 
             const tokenInput = document.getElementById('githubToken');
             const token = tokenInput.value.trim();
