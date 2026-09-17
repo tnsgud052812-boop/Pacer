@@ -815,6 +815,7 @@ let latestData = [];
 let availableMonths = [];
 let currentMonthIdx = 0; // index into availableMonths
 let latestDataMonth = '';
+let monthlyDataAsOfDate = '';
 let seasonData = [];
 let seasonStatus = null;
 let viewMode = 'monthly';
@@ -862,12 +863,14 @@ async function loadLatestData() {
         const csv = await res.text();
         latestData = normalizeStepRows(parseCSV(csv));
         latestDataMonth = getDataMonth(latestData) || getCurrentKSTMonth();
+        monthlyDataAsOfDate = getDataDate(latestData);
         if (latestData.length && latestData[0]['크롤링일시']) {
             document.getElementById('updateTime').textContent = '업데이트 ' + latestData[0]['크롤링일시'];
         }
     } catch(e) {
         latestData = [];
         latestDataMonth = '';
+        monthlyDataAsOfDate = '';
         document.getElementById('updateTime').textContent = '데이터를 불러오지 못했습니다.';
         console.error('latest error', e);
     }
@@ -1096,6 +1099,13 @@ function getDataMonth(rows) {
     return match ? `${Number(match[1])}년${Number(match[2])}월` : '';
 }
 
+function getDataDate(rows) {
+    const timestamp = rows?.[0]?.['크롤링일시'] || '';
+    const match = timestamp.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (!match) return '';
+    return `${match[1]}-${String(Number(match[2])).padStart(2, '0')}-${String(Number(match[3])).padStart(2, '0')}`;
+}
+
 function getKSTParts() {
     const parts = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Seoul',
@@ -1155,6 +1165,12 @@ function getDaysElapsed() {
     const ms = getSelectedMonth();
     const parsed = parseMonthStr(ms);
     if (!parsed) return 1;
+
+    const asOfDate = parseISODateParts(monthlyDataAsOfDate);
+    if (asOfDate && asOfDate.year === parsed.year && asOfDate.month === parsed.month) {
+        return asOfDate.day;
+    }
+
     const today = getKSTParts();
     const isCurrentMonth = (parsed.year === today.year && parsed.month === today.month);
     if (isCurrentMonth) {
@@ -1300,6 +1316,7 @@ async function loadMonthData() {
                         latestData = normalizeStepRows(parseCSV(await res.text()));
                         if (latestData.length) {
                             loaded = true;
+                            monthlyDataAsOfDate = dateStr;
                             const timestamp = latestData[0]['크롤링일시'];
                             document.getElementById('updateTime').textContent = timestamp
                                 ? '업데이트 ' + timestamp
@@ -1315,6 +1332,7 @@ async function loadMonthData() {
 
         if (!loaded) {
             latestData = [];
+            monthlyDataAsOfDate = '';
             document.getElementById('updateTime').textContent = '해당 월의 데이터가 없습니다.';
         }
     }
