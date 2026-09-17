@@ -592,7 +592,7 @@
                     </div>
                 </div>
                 <div class="season-validation" id="seasonValidation">
-                    시작일과 종료일을 설정하면 해당 기간만 집계합니다.
+                    시작일과 종료일을 설정하면 해당 기간만 집계하며, 이전 시즌 기록은 자동 보존됩니다.
                 </div>
             </div>
 
@@ -945,7 +945,7 @@
             const endDate = String(season.endDate || '').trim();
             const validation = document.getElementById('seasonValidation');
 
-            let message = '시작일과 종료일을 설정하면 해당 기간만 집계합니다.';
+            let message = '시작일과 종료일을 설정하면 해당 기간만 집계하며, 이전 시즌 기록은 자동 보존됩니다.';
             let type = '';
             let valid = true;
 
@@ -960,7 +960,7 @@
                     message = '종료일은 시작일보다 빠를 수 없습니다.';
                 } else {
                     type = 'success';
-                    message = `${startDate}부터 ${endDate}까지 양 끝 날짜를 포함하여 집계합니다.`;
+                    message = `${startDate}부터 ${endDate}까지 집계합니다. 새 기간으로 변경하면 이전 시즌은 역대 기록에 남습니다.`;
                 }
             }
 
