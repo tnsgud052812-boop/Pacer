@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>캔탑스 만보걷기</title>
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('pacerTheme');
+                const preferredTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                document.documentElement.dataset.theme = ['dark', 'light'].includes(savedTheme)
+                    ? savedTheme
+                    : preferredTheme;
+            } catch (error) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -91,9 +104,16 @@
             color: var(--text-dim);
         }
 
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .theme-toggle,
         .admin-link {
             display: inline-block;
-            margin-top: 6px;
             padding: 5px 12px;
             background: var(--surface2);
             border: 1px solid var(--border);
@@ -101,9 +121,13 @@
             color: var(--text-dim);
             text-decoration: none;
             font-size: 0.75rem;
+            font-family: inherit;
+            line-height: 1.4;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
+        .theme-toggle:hover,
         .admin-link:hover {
             background: var(--surface);
             color: var(--text);
@@ -714,7 +738,10 @@
     </div>
     <div class="header-meta">
         <div id="updateTime">로딩 중...</div>
-        <a href="admin.html" class="admin-link">⚙ 관리자</a>
+        <div class="header-actions">
+            <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="화면 테마 변경">☀ 라이트</button>
+            <a href="admin.html" class="admin-link">⚙ 관리자</a>
+        </div>
     </div>
 </div>
 
@@ -809,7 +836,7 @@ const BRANCH = 'main';
 
 let config = {
     teams: [],
-    display: { title: '캔탑스 만보걷기', theme: 'dark' }
+    display: { title: '캔탑스 만보걷기' }
 };
 let latestData = [];
 let availableMonths = [];
@@ -987,11 +1014,9 @@ function parseCSV(csv) {
 
 function normalizeConfig(data) {
     const displaySource = data?.display && typeof data.display === 'object' ? data.display : {};
-    const displayTheme = String(displaySource.theme ?? 'dark').trim().toLowerCase();
     const display = {
         ...displaySource,
-        title: String(displaySource.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기',
-        theme: ['dark', 'light'].includes(displayTheme) ? displayTheme : 'dark'
+        title: String(displaySource.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기'
     };
 
     const sourceTeams = Array.isArray(data?.groups)
@@ -1023,10 +1048,28 @@ function normalizeConfig(data) {
 
 function applyDisplaySettings() {
     const title = config.display?.title || '캔탑스 만보걷기';
-    const theme = config.display?.theme === 'light' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = theme;
     document.title = title;
     document.getElementById('siteTitle').textContent = title;
+    updateThemeToggle();
+}
+
+function updateThemeToggle() {
+    const button = document.getElementById('themeToggle');
+    if (!button) return;
+    const isLight = document.documentElement.dataset.theme === 'light';
+    button.textContent = isLight ? '🌙 다크' : '☀ 라이트';
+    button.title = isLight ? '다크 모드로 변경' : '라이트 모드로 변경';
+}
+
+function toggleTheme() {
+    const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = nextTheme;
+    try {
+        localStorage.setItem('pacerTheme', nextTheme);
+    } catch (error) {
+        console.warn('테마 설정을 저장하지 못했습니다.', error);
+    }
+    updateThemeToggle();
 }
 
 function normalizeMemberName(member) {
