@@ -930,7 +930,7 @@ async function loadLatestData() {
         latestDataMonth = getDataMonth(latestData) || getCurrentKSTMonth();
         monthlyDataAsOfDate = getDataDate(latestData);
         if (latestData.length && latestData[0]['크롤링일시']) {
-            document.getElementById('updateTime').textContent = '업데이트 ' + latestData[0]['크롤링일시'];
+            document.getElementById('updateTime').textContent = '업데이트 ' + formatTimestamp(latestData[0]['크롤링일시']);
         }
     } catch(e) {
         latestData = [];
@@ -1289,7 +1289,11 @@ function getActiveTeams() {
 }
 
 function formatTimestamp(value) {
-    return String(value || '').replace('T', ' ').replace(/\+09:00$/, '');
+    const text = String(value || '')
+        .replace('T', ' ')
+        .replace(/(Z|[+-]\d{2}:\d{2})$/, '');
+    const match = text.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+    return match ? match[1] : text.replace(/\.\d+$/, '');
 }
 
 /* ── Month Navigation ── */
@@ -1467,7 +1471,7 @@ async function loadMonthData() {
                             monthlyDataAsOfDate = dateStr;
                             const timestamp = latestData[0]['크롤링일시'];
                             document.getElementById('updateTime').textContent = timestamp
-                                ? '업데이트 ' + timestamp
+                                ? '업데이트 ' + formatTimestamp(timestamp)
                                 : '기준일 ' + dateStr;
                             break;
                         }
