@@ -194,6 +194,37 @@
             letter-spacing: 0;
         }
 
+        .season-selector {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 14px;
+        }
+
+        .season-selector.show {
+            display: flex;
+        }
+
+        .season-selector label {
+            flex: 0 0 auto;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .season-select {
+            min-width: 220px;
+            max-width: 100%;
+            padding: 8px 34px 8px 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            background: var(--surface);
+            font-family: inherit;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
         .view-switch {
             display: flex;
             width: fit-content;
@@ -758,6 +789,11 @@
     </div>
     <div class="period-help" id="periodHelp"></div>
 
+    <div class="season-selector" id="seasonSelector">
+        <label for="seasonSelect">시즌 선택</label>
+        <select class="season-select" id="seasonSelect" onchange="changeSeason(this.value)"></select>
+    </div>
+
     <!-- Month Nav -->
     <div class="month-nav">
         <button class="month-btn" id="prevMonth" onclick="changeMonth(-1)">◀</button>
@@ -843,6 +879,8 @@ let availableMonths = [];
 let currentMonthIdx = 0; // index into availableMonths
 let latestDataMonth = '';
 let monthlyDataAsOfDate = '';
+let seasons = [];
+let selectedSeasonId = '';
 let seasonData = [];
 let seasonStatus = null;
 let viewMode = 'monthly';
@@ -852,7 +890,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
     await loadConfig();
     await loadLatestData();
-    await Promise.all([loadAvailableMonths(), loadSeasonData()]);
+    await Promise.all([loadAvailableMonths(), loadSeasonCatalog()]);
     currentMonthIdx = 0; // newest
 
     if (hasSeasonView()) {
@@ -937,19 +975,52 @@ async function loadAvailableMonths() {
     availableMonths = [...months].sort((a, b) => monthSortValue(b) - monthSortValue(a));
 }
 
-async function loadSeasonData() {
+async function loadSeasonCatalog() {
+    seasons = [];
+    selectedSeasonId = '';
+
+    try {
+        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/seasons.json?t=${Date.now()}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`catalog HTTP ${response.status}`);
+        const data = await response.json();
+        seasons = Array.isArray(data)
+            ? data.filter(item => item?.id && item?.name && item?.startDate && item?.endDate)
+            : [];
+    } catch (error) {
+        // seasons.json 도입 전 저장소도 기존 시즌 화면으로 계속 표시한다.
+        console.warn('season catalog error', error);
+    }
+
+    if (!seasons.length) {
+        await loadSeasonData('');
+        return;
+    }
+
+    const requestedId = new URLSearchParams(location.search).get('season');
+    const selected = seasons.find(item => item.id === requestedId)
+        || seasons.find(item => item.current)
+        || seasons[0];
+    selectedSeasonId = selected.id;
+    await loadSeasonData(selectedSeasonId);
+    renderSeasonSelector();
+}
+
+async function loadSeasonData(seasonId = selectedSeasonId) {
     seasonData = [];
     seasonStatus = null;
 
     try {
-        const statusUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/season_status.json?t=${Date.now()}`;
+        const catalogItem = seasons.find(item => item.id === seasonId);
+        const basePath = catalogItem?.dataPath || (seasonId ? `data/seasons/${encodeURIComponent(seasonId)}` : 'data');
+        const statusUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${basePath}/season_status.json?t=${Date.now()}`;
         const statusResponse = await fetch(statusUrl, { cache: 'no-store' });
         if (!statusResponse.ok) throw new Error(`status HTTP ${statusResponse.status}`);
         seasonStatus = await statusResponse.json();
 
         if (!['before', 'active', 'ended'].includes(seasonStatus?.status)) return;
 
-        const csvUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/season.csv?t=${Date.now()}`;
+        const csvUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${basePath}/season.csv?t=${Date.now()}`;
         const csvResponse = await fetch(csvUrl, { cache: 'no-store' });
         if (!csvResponse.ok) throw new Error(`CSV HTTP ${csvResponse.status}`);
         seasonData = normalizeSeasonRows(parseCSV(await csvResponse.text()));
@@ -962,6 +1033,32 @@ async function loadSeasonData() {
         seasonStatus = null;
         console.error('season data error', error);
     }
+}
+
+function renderSeasonSelector() {
+    const selector = document.getElementById('seasonSelector');
+    const select = document.getElementById('seasonSelect');
+    if (!selector || !select) return;
+
+    selector.classList.toggle('show', viewMode === 'season' && seasons.length > 0);
+    select.innerHTML = seasons.map(item => {
+        const statusLabel = item.current ? ' · 현재' : '';
+        return `<option value="${escapeHTML(item.id)}" ${item.id === selectedSeasonId ? 'selected' : ''}>${escapeHTML(item.name)}${statusLabel}</option>`;
+    }).join('');
+}
+
+async function changeSeason(seasonId) {
+    if (!seasons.some(item => item.id === seasonId) || seasonId === selectedSeasonId) return;
+    selectedSeasonId = seasonId;
+    await loadSeasonData(selectedSeasonId);
+
+    const url = new URL(location.href);
+    url.searchParams.set('season', selectedSeasonId);
+    history.replaceState(null, '', url);
+
+    renderSeasonSelector();
+    updatePeriodUI();
+    render();
 }
 
 function parseCSV(csv) {
@@ -1184,6 +1281,13 @@ function getActiveData() {
     return viewMode === 'season' && hasSeasonView() ? seasonData : latestData;
 }
 
+function getActiveTeams() {
+    if (viewMode === 'season' && hasSeasonView() && Array.isArray(seasonStatus.teams)) {
+        return seasonStatus.teams;
+    }
+    return config.teams || [];
+}
+
 function formatTimestamp(value) {
     return String(value || '').replace('T', ' ').replace(/\+09:00$/, '');
 }
@@ -1251,6 +1355,7 @@ function updatePeriodUI() {
     periodHelp.textContent = seasonAvailable
         ? '시즌 전체 또는 월별 기록을 선택해 조회할 수 있습니다.'
         : getSeasonUnavailableMessage();
+    renderSeasonSelector();
 
     if (viewMode === 'season' && hasSeasonView()) {
         prevButton.style.display = 'none';
@@ -1385,7 +1490,7 @@ async function loadMonthData() {
 
 function getRegisteredMembers() {
     const s = new Set();
-    (config.teams || []).forEach(t => (t.members || []).forEach(m => s.add(m)));
+    getActiveTeams().forEach(t => (t.members || []).forEach(m => s.add(m)));
     return s;
 }
 
@@ -1407,7 +1512,7 @@ function getDailyAvg(name) {
 
 function getTeamStats() {
     const days = getDaysElapsed();
-    return (config.teams || []).map(team => {
+    return getActiveTeams().map(team => {
         let totalSteps = 0;
         let count = 0;
         (team.members || []).forEach(name => {
@@ -1502,7 +1607,7 @@ function renderRanking(filter = '') {
     const registered = getRegisteredMembers();
     const days = getDaysElapsed();
     const teamMap = {};
-    (config.teams || []).forEach(t => (t.members || []).forEach(m => teamMap[m] = t.name));
+    getActiveTeams().forEach(t => (t.members || []).forEach(m => teamMap[m] = t.name));
 
     let rows = [];
     for (const name of registered) {
