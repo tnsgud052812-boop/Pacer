@@ -3,7 +3,7 @@ name: Pacer 일별 크롤링
 on:
   # 매일 12:00 KST (= 03:00 UTC)
   schedule:
-    - cron: '5 6 * * *'
+    - cron: '40 7 * * *'
 
   # 수동 실행
   workflow_dispatch:
