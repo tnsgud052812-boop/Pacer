@@ -225,6 +225,11 @@
             cursor: pointer;
         }
 
+        .season-select:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
         .view-switch {
             display: flex;
             width: fit-content;
@@ -994,6 +999,19 @@ async function loadSeasonCatalog() {
 
     if (!seasons.length) {
         await loadSeasonData('');
+        if (hasSeasonView()) {
+            selectedSeasonId = seasonStatus.seasonId || 'current-season';
+            seasons = [{
+                id: selectedSeasonId,
+                name: seasonStatus.seasonName,
+                startDate: seasonStatus.startDate,
+                endDate: seasonStatus.endDate,
+                status: seasonStatus.status,
+                current: true,
+                dataPath: 'data'
+            }];
+        }
+        renderSeasonSelector();
         return;
     }
 
@@ -1040,7 +1058,13 @@ function renderSeasonSelector() {
     const select = document.getElementById('seasonSelect');
     if (!selector || !select) return;
 
-    selector.classList.toggle('show', viewMode === 'season' && seasons.length > 0);
+    selector.classList.add('show');
+    select.disabled = seasons.length === 0;
+    if (!seasons.length) {
+        select.innerHTML = '<option value="">등록된 시즌 없음</option>';
+        return;
+    }
+
     select.innerHTML = seasons.map(item => {
         const statusLabel = item.current ? ' · 현재' : '';
         return `<option value="${escapeHTML(item.id)}" ${item.id === selectedSeasonId ? 'selected' : ''}>${escapeHTML(item.name)}${statusLabel}</option>`;
