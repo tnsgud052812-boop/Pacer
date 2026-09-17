@@ -356,10 +356,27 @@ def load_season_config() -> Optional[Dict]:
     if end_date < start_date:
         raise ValueError("시즌 종료일은 시작일보다 빠를 수 없습니다.")
 
+    teams = []
+    for index, team in enumerate(config.get("teams", []), 1):
+        if not isinstance(team, dict):
+            continue
+        members = []
+        for member in team.get("members", []):
+            member_name = str(member).strip()
+            if member_name and member_name not in members:
+                members.append(member_name)
+        teams.append({
+            "id": str(team.get("id", f"team-{index}")),
+            "name": str(team.get("name", f"팀 {index}")).strip() or f"팀 {index}",
+            "members": members,
+        })
+
     return {
+        "id": f"{start_date.isoformat()}_{end_date.isoformat()}",
         "name": name,
         "start_date": start_date,
         "end_date": end_date,
+        "teams": teams,
     }
 
 
@@ -402,12 +419,17 @@ def load_daily_steps(snapshot_date: date):
     return steps, unknown_names
 
 
-def write_season_files(rows: List[Dict], status_data: Dict, crawl_time: datetime):
-    """시즌 누적 CSV와 상태 JSON 저장."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+def write_season_pair(
+    directory: Path,
+    rows: List[Dict],
+    status_data: Dict,
+    crawl_time: datetime,
+):
+    """지정한 폴더에 시즌 누적 CSV와 상태 JSON을 저장."""
+    directory.mkdir(parents=True, exist_ok=True)
     crawl_time_str = crawl_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    csv_path = DATA_DIR / "season.csv"
+    csv_path = directory / "season.csv"
     with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -436,13 +458,74 @@ def write_season_files(rows: List[Dict], status_data: Dict, crawl_time: datetime
                 crawl_time_str,
             ])
 
-    status_path = DATA_DIR / "season_status.json"
+    status_path = directory / "season_status.json"
     with status_path.open("w", encoding="utf-8") as f:
         json.dump(status_data, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
     print(f"시즌 CSV 저장: {csv_path}")
     print(f"시즌 상태 저장: {status_path}")
+
+
+def update_season_catalog(season: Dict, status_data: Dict):
+    """역대 시즌 목록을 유지하고 현재 설정된 시즌만 current로 표시."""
+    catalog_path = DATA_DIR / "seasons.json"
+    catalog = []
+    if catalog_path.exists():
+        try:
+            with catalog_path.open("r", encoding="utf-8-sig") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, list):
+                catalog = [item for item in loaded if isinstance(item, dict)]
+        except (OSError, json.JSONDecodeError) as error:
+            raise RuntimeError(f"역대 시즌 목록 로드 실패 ({catalog_path}): {error}") from error
+
+    season_id = season["id"]
+    updated_entry = {
+        "id": season_id,
+        "name": season["name"],
+        "startDate": season["start_date"].isoformat(),
+        "endDate": season["end_date"].isoformat(),
+        "status": status_data.get("status", ""),
+        "current": True,
+        "dataPath": f"data/seasons/{season_id}",
+        "generatedAt": status_data.get("generatedAt", ""),
+    }
+
+    merged = []
+    replaced = False
+    for item in catalog:
+        if item.get("id") == season_id:
+            merged.append(updated_entry)
+            replaced = True
+        else:
+            merged.append({**item, "current": False})
+    if not replaced:
+        merged.append(updated_entry)
+
+    merged.sort(key=lambda item: str(item.get("startDate", "")), reverse=True)
+    with catalog_path.open("w", encoding="utf-8") as f:
+        json.dump(merged, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    print(f"역대 시즌 목록 저장: {catalog_path}")
+
+
+def write_season_files(
+    rows: List[Dict],
+    status_data: Dict,
+    crawl_time: datetime,
+    season: Optional[Dict] = None,
+):
+    """현재 시즌 파일을 저장하고, 유효한 시즌은 역대 기록에도 보존."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    write_season_pair(DATA_DIR, rows, status_data, crawl_time)
+
+    if season is None:
+        return
+
+    archive_dir = DATA_DIR / "seasons" / season["id"]
+    write_season_pair(archive_dir, rows, status_data, crawl_time)
+    update_season_catalog(season, status_data)
 
 
 def rebuild_season_summary(
@@ -457,7 +540,7 @@ def rebuild_season_summary(
         season = load_season_config()
     except (RuntimeError, ValueError) as error:
         status_data = {
-            "version": 1,
+            "version": 2,
             "status": "invalid",
             "message": str(error),
             "seasonName": "",
@@ -478,7 +561,7 @@ def rebuild_season_summary(
 
     if season is None:
         status_data = {
-            "version": 1,
+            "version": 2,
             "status": "not_configured",
             "message": "시즌이 설정되지 않았습니다.",
             "seasonName": "",
@@ -499,7 +582,14 @@ def rebuild_season_summary(
 
     start_date = season["start_date"]
     end_date = season["end_date"]
-    totals = {name: 0 for name in current_member_names if name}
+    configured_names = [
+        name
+        for team in season["teams"]
+        for name in team.get("members", [])
+        if name
+    ]
+    member_names = configured_names or current_member_names
+    totals = {name: 0 for name in member_names if name}
     missing_dates = []
     unknown_dates = set()
     unknown_value_count = 0
@@ -527,7 +617,8 @@ def rebuild_season_summary(
             unknown_value_count += len(unknown_names)
 
         for name, steps in daily_steps.items():
-            totals[name] = totals.get(name, 0) + steps
+            if name in totals:
+                totals[name] += steps
 
     elapsed_days = len(expected_dates)
     sorted_totals = sorted(totals.items(), key=lambda item: (-item[1], item[0]))
@@ -544,10 +635,11 @@ def rebuild_season_summary(
 
     complete = not missing_dates and unknown_value_count == 0
     status_data = {
-        "version": 1,
+        "version": 2,
         "status": season_status,
         "message": "" if complete else "일부 날짜 또는 걸음수 데이터가 누락되었습니다.",
         "seasonName": season["name"],
+        "seasonId": season["id"],
         "startDate": start_date.isoformat(),
         "endDate": end_date.isoformat(),
         "asOfDate": effective_date.isoformat() if effective_date else None,
@@ -557,9 +649,10 @@ def rebuild_season_summary(
         "unknownValueCount": unknown_value_count,
         "unknownDates": sorted(unknown_dates),
         "complete": complete,
+        "teams": season["teams"],
         "generatedAt": generated_at,
     }
-    write_season_files(rows, status_data, crawl_time)
+    write_season_files(rows, status_data, crawl_time, season)
 
     print(
         f"시즌 집계 완료: {season['name']} / 상태={season_status} / "
