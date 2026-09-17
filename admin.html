@@ -336,7 +336,7 @@
 
         .display-grid {
             display: grid;
-            grid-template-columns: minmax(240px, 1.5fr) minmax(180px, 1fr);
+            grid-template-columns: minmax(240px, 1fr);
             gap: 12px;
         }
 
@@ -566,16 +566,9 @@
                         <input type="text" class="form-input" id="siteTitleInput"
                             placeholder="예: 2026 사내 걷기 대항전" oninput="updateDisplaySettings()">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="siteThemeSelect">화면 테마</label>
-                        <select class="form-select" id="siteThemeSelect" onchange="updateDisplaySettings()">
-                            <option value="dark">다크 모드</option>
-                            <option value="light">라이트 모드</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="season-validation" id="displayValidation">
-                    저장하면 메인 화면의 제목과 색상 테마가 변경됩니다.
+                    저장하면 메인 화면의 제목이 변경됩니다. 화면 테마는 메인 화면에서 각 사용자가 선택합니다.
                 </div>
             </div>
 
@@ -839,12 +832,11 @@
 
             const normalized = { ...data };
             const display = data.display && typeof data.display === 'object' ? data.display : {};
-            const theme = String(display.theme ?? 'dark').trim().toLowerCase();
             normalized.display = {
                 ...display,
-                title: String(display.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기',
-                theme: ['dark', 'light'].includes(theme) ? theme : 'dark'
+                title: String(display.title ?? '캔탑스 만보걷기').trim() || '캔탑스 만보걷기'
             };
+            delete normalized.display.theme;
             const season = data.season && typeof data.season === 'object' ? data.season : {};
             normalized.season = {
                 ...season,
@@ -885,7 +877,6 @@
         function renderDisplaySettings() {
             const display = config.display || {};
             document.getElementById('siteTitleInput').value = display.title || '캔탑스 만보걷기';
-            document.getElementById('siteThemeSelect').value = display.theme || 'dark';
             applyAdminDisplayLabels();
             validateDisplaySettings(false);
         }
@@ -894,9 +885,9 @@
             if (!configLoaded) return;
             config.display = {
                 ...(config.display || {}),
-                title: document.getElementById('siteTitleInput').value.trim(),
-                theme: document.getElementById('siteThemeSelect').value
+                title: document.getElementById('siteTitleInput').value.trim()
             };
+            delete config.display.theme;
             applyAdminDisplayLabels();
             validateDisplaySettings(false);
             markChanged();
@@ -910,20 +901,15 @@
 
         function validateDisplaySettings(showErrorToast = false) {
             const title = String(config.display?.title || '').trim();
-            const theme = String(config.display?.theme || '');
             const validation = document.getElementById('displayValidation');
             let valid = true;
-            let message = '저장하면 메인 화면의 제목과 색상 테마가 변경됩니다.';
+            let message = '저장하면 메인 화면의 제목이 변경됩니다. 화면 테마는 메인 화면에서 각 사용자가 선택합니다.';
             let type = 'success';
 
             if (!title) {
                 valid = false;
                 type = 'error';
                 message = '사이트 이름을 입력해야 합니다.';
-            } else if (!['dark', 'light'].includes(theme)) {
-                valid = false;
-                type = 'error';
-                message = '화면 테마를 다시 선택하세요.';
             }
 
             validation.textContent = message;
