@@ -1,0 +1,12 @@
+[
+  {
+    "id": "2026-09-01_2026-12-31",
+    "name": "2026 하반기",
+    "startDate": "2026-09-01",
+    "endDate": "2026-12-31",
+    "status": "active",
+    "current": true,
+    "dataPath": "data/seasons/2026-09-01_2026-12-31",
+    "generatedAt": "2026-09-18T13:01:18.140246+09:00"
+  }
+]
