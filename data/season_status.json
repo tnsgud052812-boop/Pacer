@@ -6,9 +6,9 @@
   "seasonId": "2026-09-01_2026-12-31",
   "startDate": "2026-09-01",
   "endDate": "2026-12-31",
-  "asOfDate": "2026-09-20",
-  "expectedDays": 20,
-  "availableDays": 20,
+  "asOfDate": "2026-09-21",
+  "expectedDays": 21,
+  "availableDays": 21,
   "missingDates": [],
   "unknownValueCount": 5,
   "unknownDates": [
@@ -46,5 +46,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-09-20T13:00:30.704834+09:00"
+  "generatedAt": "2026-09-21T13:00:23.708460+09:00"
 }
