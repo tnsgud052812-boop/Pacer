@@ -588,7 +588,9 @@ def rebuild_season_summary(
         for name in team.get("members", [])
         if name
     ]
-    member_names = configured_names or current_member_names
+    # 팀 순위는 config.json의 등록 팀원을 사용하지만, 전사 시즌 랭킹은
+    # 시즌 중 일별 스냅샷에 등장한 전체 참가자를 대상으로 집계한다.
+    member_names = list(dict.fromkeys(configured_names + current_member_names))
     totals = {name: 0 for name in member_names if name}
     missing_dates = []
     unknown_dates = set()
@@ -615,10 +617,15 @@ def rebuild_season_summary(
         if unknown_names:
             unknown_dates.add(snapshot_date.isoformat())
             unknown_value_count += len(unknown_names)
+            for name in unknown_names:
+                if name:
+                    totals.setdefault(name, 0)
 
         for name, steps in daily_steps.items():
-            if name in totals:
-                totals[name] += steps
+            if not name:
+                continue
+            totals.setdefault(name, 0)
+            totals[name] += steps
 
     elapsed_days = len(expected_dates)
     sorted_totals = sorted(totals.items(), key=lambda item: (-item[1], item[0]))
