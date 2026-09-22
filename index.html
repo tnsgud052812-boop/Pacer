@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0c0f14">
+    <meta name="application-name" content="캔탑스 만보걷기">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="캔탑스 만보걷기">
     <title>캔탑스 만보걷기</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <script>
         (() => {
             try {
@@ -350,12 +359,19 @@
             border-radius: 8px;
             transition: all 0.2s;
             font-family: inherit;
+            white-space: nowrap;
         }
 
         .tab-btn.active {
             background: var(--accent);
             color: #fff;
             font-weight: 700;
+        }
+
+        .ranking-scope-hint {
+            margin: -8px 2px 12px;
+            color: var(--text-dim);
+            font-size: 0.75rem;
         }
 
         /* ── Team Card ── */
@@ -762,6 +778,7 @@
             .summary-item .lbl { margin-top: 0; }
             .bar-cell { display: none; }
             .month-label { font-size: 1.1rem; min-width: 120px; }
+            .tab-btn { font-size: 0.72rem; }
         }
     </style>
 </head>
@@ -827,6 +844,7 @@
     <div class="tab-bar">
         <button class="tab-btn active" id="teamTabBtn" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
         <button class="tab-btn" id="allTabBtn" data-tab="all" onclick="switchTab('all')">개인 랭킹</button>
+        <button class="tab-btn" id="companyTabBtn" data-tab="company" onclick="switchTab('company')">전사 랭킹</button>
     </div>
 
     <!-- Teams Tab -->
@@ -838,6 +856,7 @@
 
     <!-- All Ranking Tab -->
     <div id="allPanel" style="display:none;">
+        <div class="ranking-scope-hint" id="rankingScopeHint">등록된 팀 구성원 기준</div>
         <input type="text" class="search-box" id="searchInput" placeholder="이름 검색..." oninput="filterRanking()">
         <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius);">
             <table class="rank-table">
@@ -889,6 +908,7 @@ let selectedSeasonId = '';
 let seasonData = [];
 let seasonStatus = null;
 let viewMode = 'monthly';
+let activeTab = 'teams';
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -1396,6 +1416,7 @@ function updatePeriodUI() {
         document.getElementById('sTopLabel').textContent = '시즌 1위 팀';
         document.getElementById('teamTabBtn').textContent = '시즌 팀 순위';
         document.getElementById('allTabBtn').textContent = '시즌 개인 랭킹';
+        document.getElementById('companyTabBtn').textContent = '시즌 전사 랭킹';
         document.getElementById('rankTotalLabel').textContent = '시즌 누적';
         document.getElementById('rankAvgLabel').textContent = '시즌 하루 평균';
         updateSeasonNotice();
@@ -1404,13 +1425,15 @@ function updatePeriodUI() {
         nextButton.style.display = 'flex';
         updateMonthUI();
         document.getElementById('sAvgLabel').textContent = '전체 하루 평균';
-        document.getElementById('sTopLabel').textContent = '월간 1위 팀';
-        document.getElementById('teamTabBtn').textContent = '월간 팀 순위';
-        document.getElementById('allTabBtn').textContent = '월간 개인 랭킹';
+        document.getElementById('sTopLabel').textContent = '월별 1위 팀';
+        document.getElementById('teamTabBtn').textContent = '월별 팀 순위';
+        document.getElementById('allTabBtn').textContent = '월별 개인 랭킹';
+        document.getElementById('companyTabBtn').textContent = '월별 전사 랭킹';
         document.getElementById('rankTotalLabel').textContent = '월 누적';
         document.getElementById('rankAvgLabel').textContent = '하루 평균';
         document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
     }
+    updateRankingScopeUI();
 }
 
 function getSeasonUnavailableMessage() {
@@ -1637,23 +1660,36 @@ function renderRanking(filter = '') {
     const teamMap = {};
     getActiveTeams().forEach(t => (t.members || []).forEach(m => teamMap[m] = t.name));
 
+    const rankingMembers = activeTab === 'company'
+        ? new Set(getActiveData().map(row => row['이름']).filter(Boolean))
+        : registered;
+
     let rows = [];
-    for (const name of registered) {
+    for (const name of rankingMembers) {
         const total = getAccumulatedTotal(name);
         const avg = days > 0 ? Math.floor(total / days) : 0;
-        rows.push({ name, avg, total, team: teamMap[name] || '-' });
+        const member = getMember(name);
+        const team = teamMap[name] || getField(member, ['소속', '소속팀', '팀', '팀명', '부서']) || '-';
+        rows.push({ name, avg, total, team });
     }
     rows.sort((a, b) => b.total - a.total || b.avg - a.avg || a.name.localeCompare(b.name, 'ko'));
+    rows.forEach((row, index) => row.rank = index + 1);
+
+    const maxAvg = rows.length ? Math.max(...rows.map(row => row.avg), 1) : 1;
 
     if (filter) {
         rows = rows.filter(r => r.name.includes(filter));
     }
 
-    const maxAvg = rows.length ? Math.max(rows[0].avg, 1) : 1;
     const tbody = document.getElementById('rankBody');
 
-    tbody.innerHTML = rows.map((r, i) => {
-        const rank = i + 1;
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:36px 12px;">표시할 인원이 없습니다.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+        const rank = r.rank;
         const rc = rank === 1 ? 'rn1' : rank === 2 ? 'rn2' : rank === 3 ? 'rn3' : 'rnd';
         const pct = ((r.avg / maxAvg) * 100).toFixed(1);
         return `
@@ -1674,12 +1710,29 @@ function filterRanking() {
     renderRanking(document.getElementById('searchInput').value);
 }
 
+function updateRankingScopeUI() {
+    const isCompany = activeTab === 'company';
+    document.getElementById('rankingScopeHint').textContent = isCompany
+        ? 'Pacer 전체 참가자 기준'
+        : '등록된 팀 구성원 기준';
+    document.getElementById('searchInput').placeholder = isCompany
+        ? '전사 참가자 이름 검색...'
+        : '이름 검색...';
+}
+
 /* ── Tabs ── */
 
 function switchTab(tab) {
+    activeTab = tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     document.getElementById('teamsPanel').style.display = tab === 'teams' ? 'block' : 'none';
-    document.getElementById('allPanel').style.display = tab === 'all' ? 'block' : 'none';
+    const isRankingTab = tab === 'all' || tab === 'company';
+    document.getElementById('allPanel').style.display = isRankingTab ? 'block' : 'none';
+    if (isRankingTab) {
+        document.getElementById('searchInput').value = '';
+        updateRankingScopeUI();
+        renderRanking();
+    }
 }
 
 /* ── Detail Modal ── */
