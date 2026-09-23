@@ -340,7 +340,7 @@
         .tab-bar {
             display: flex;
             gap: 2px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             background: var(--surface);
             padding: 3px;
             border-radius: 10px;
@@ -372,6 +372,27 @@
             margin: -8px 2px 12px;
             color: var(--text-dim);
             font-size: 0.75rem;
+        }
+
+        .company-ranking-toggle {
+            width: 100%;
+            margin: 0 0 20px;
+            padding: 11px 14px;
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-family: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .company-ranking-toggle:hover,
+        .company-ranking-toggle.open {
+            background: var(--accent);
+            color: #fff;
         }
 
         /* ── Team Card ── */
@@ -840,12 +861,12 @@
     </div>
 
     <!-- Tabs -->
-    <div class="control-label">순위 구분</div>
-    <div class="tab-bar">
+    <div class="control-label" id="rankingControlLabel">순위 구분</div>
+    <div class="tab-bar" id="mainTabBar">
         <button class="tab-btn active" id="teamTabBtn" data-tab="teams" onclick="switchTab('teams')">팀 순위</button>
         <button class="tab-btn" id="allTabBtn" data-tab="all" onclick="switchTab('all')">개인 랭킹</button>
-        <button class="tab-btn" id="companyTabBtn" data-tab="company" onclick="switchTab('company')">전사 랭킹</button>
     </div>
+    <button type="button" class="company-ranking-toggle" id="companyRankingBtn" onclick="toggleCompanyRanking()">🏢 전체 랭킹 보기</button>
 
     <!-- Teams Tab -->
     <div id="teamsPanel">
@@ -871,6 +892,27 @@
                     </tr>
                 </thead>
                 <tbody id="rankBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Company-wide Ranking -->
+    <div id="companyPanel" style="display:none;">
+        <div class="ranking-scope-hint">Pacer 전체 참가자 기준</div>
+        <input type="text" class="search-box" id="companySearchInput" placeholder="전체 참가자 이름 검색..." oninput="filterCompanyRanking()">
+        <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius);">
+            <table class="rank-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>이름</th>
+                        <th>소속</th>
+                        <th class="bar-cell"></th>
+                        <th class="numeric-cell" id="companyRankTotalLabel">누적 걸음수</th>
+                        <th id="companyRankAvgLabel">하루 평균</th>
+                    </tr>
+                </thead>
+                <tbody id="companyRankBody"></tbody>
             </table>
         </div>
     </div>
@@ -909,6 +951,7 @@ let seasonData = [];
 let seasonStatus = null;
 let viewMode = 'monthly';
 let activeTab = 'teams';
+let companyRankingOpen = false;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -1416,9 +1459,10 @@ function updatePeriodUI() {
         document.getElementById('sTopLabel').textContent = '시즌 1위 팀';
         document.getElementById('teamTabBtn').textContent = '시즌 팀 순위';
         document.getElementById('allTabBtn').textContent = '시즌 개인 랭킹';
-        document.getElementById('companyTabBtn').textContent = '시즌 전사 랭킹';
         document.getElementById('rankTotalLabel').textContent = '시즌 누적';
         document.getElementById('rankAvgLabel').textContent = '시즌 하루 평균';
+        document.getElementById('companyRankTotalLabel').textContent = '시즌 누적';
+        document.getElementById('companyRankAvgLabel').textContent = '시즌 하루 평균';
         updateSeasonNotice();
     } else {
         prevButton.style.display = 'flex';
@@ -1428,12 +1472,13 @@ function updatePeriodUI() {
         document.getElementById('sTopLabel').textContent = '월별 1위 팀';
         document.getElementById('teamTabBtn').textContent = '월별 팀 순위';
         document.getElementById('allTabBtn').textContent = '월별 개인 랭킹';
-        document.getElementById('companyTabBtn').textContent = '월별 전사 랭킹';
         document.getElementById('rankTotalLabel').textContent = '월 누적';
         document.getElementById('rankAvgLabel').textContent = '하루 평균';
+        document.getElementById('companyRankTotalLabel').textContent = '월 누적';
+        document.getElementById('companyRankAvgLabel').textContent = '하루 평균';
         document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
     }
-    updateRankingScopeUI();
+    updateCompanyRankingUI();
 }
 
 function getSeasonUnavailableMessage() {
@@ -1580,7 +1625,8 @@ function getTeamStats() {
 function render() {
     renderSummary();
     renderTeams();
-    renderRanking();
+    renderRanking('personal', document.getElementById('searchInput')?.value || '');
+    renderRanking('company', document.getElementById('companySearchInput')?.value || '');
 }
 
 function renderSummary() {
@@ -1654,13 +1700,13 @@ function toggleTC(id) {
     document.getElementById('tc-' + id).classList.toggle('open');
 }
 
-function renderRanking(filter = '') {
+function renderRanking(scope = 'personal', filter = '') {
     const registered = getRegisteredMembers();
     const days = getDaysElapsed();
     const teamMap = {};
     getActiveTeams().forEach(t => (t.members || []).forEach(m => teamMap[m] = t.name));
 
-    const rankingMembers = activeTab === 'company'
+    const rankingMembers = scope === 'company'
         ? new Set(getActiveData().map(row => row['이름']).filter(Boolean))
         : registered;
 
@@ -1681,7 +1727,7 @@ function renderRanking(filter = '') {
         rows = rows.filter(r => r.name.includes(filter));
     }
 
-    const tbody = document.getElementById('rankBody');
+    const tbody = document.getElementById(scope === 'company' ? 'companyRankBody' : 'rankBody');
 
     if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:36px 12px;">표시할 인원이 없습니다.</td></tr>';
@@ -1707,17 +1753,35 @@ function renderRanking(filter = '') {
 }
 
 function filterRanking() {
-    renderRanking(document.getElementById('searchInput').value);
+    renderRanking('personal', document.getElementById('searchInput').value);
 }
 
-function updateRankingScopeUI() {
-    const isCompany = activeTab === 'company';
-    document.getElementById('rankingScopeHint').textContent = isCompany
-        ? 'Pacer 전체 참가자 기준'
-        : '등록된 팀 구성원 기준';
-    document.getElementById('searchInput').placeholder = isCompany
-        ? '전사 참가자 이름 검색...'
-        : '이름 검색...';
+function filterCompanyRanking() {
+    renderRanking('company', document.getElementById('companySearchInput').value);
+}
+
+function updateCompanyRankingUI() {
+    const button = document.getElementById('companyRankingBtn');
+    const label = document.getElementById('rankingControlLabel');
+    button.classList.toggle('open', companyRankingOpen);
+    button.textContent = companyRankingOpen
+        ? '← 팀·개인 순위로 돌아가기'
+        : '🏢 전체 랭킹 보기';
+    label.textContent = companyRankingOpen
+        ? `${viewMode === 'season' ? '시즌' : '월별'} 전체 랭킹`
+        : '순위 구분';
+}
+
+function toggleCompanyRanking() {
+    companyRankingOpen = !companyRankingOpen;
+    document.getElementById('mainTabBar').style.display = companyRankingOpen ? 'none' : 'flex';
+    document.getElementById('teamsPanel').style.display = !companyRankingOpen && activeTab === 'teams' ? 'block' : 'none';
+    document.getElementById('allPanel').style.display = !companyRankingOpen && activeTab === 'all' ? 'block' : 'none';
+    document.getElementById('companyPanel').style.display = companyRankingOpen ? 'block' : 'none';
+    if (companyRankingOpen) {
+        renderRanking('company', document.getElementById('companySearchInput').value);
+    }
+    updateCompanyRankingUI();
 }
 
 /* ── Tabs ── */
@@ -1726,12 +1790,10 @@ function switchTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     document.getElementById('teamsPanel').style.display = tab === 'teams' ? 'block' : 'none';
-    const isRankingTab = tab === 'all' || tab === 'company';
-    document.getElementById('allPanel').style.display = isRankingTab ? 'block' : 'none';
-    if (isRankingTab) {
+    document.getElementById('allPanel').style.display = tab === 'all' ? 'block' : 'none';
+    if (tab === 'all') {
         document.getElementById('searchInput').value = '';
-        updateRankingScopeUI();
-        renderRanking();
+        renderRanking('personal');
     }
 }
 
