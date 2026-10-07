@@ -932,9 +932,6 @@
 </div>
 
 <script>
-const REPO_OWNER = 'tnsgud052812-boop';
-const REPO_NAME = 'Pacer';
-const BRANCH = 'main';
 
 let config = {
     teams: [],
@@ -975,7 +972,7 @@ async function init() {
 
 async function loadConfig() {
     try {
-        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/config.json?t=${Date.now()}`;
+        const url = `./data/config.json?t=${Date.now()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -990,7 +987,7 @@ async function loadConfig() {
 
 async function loadLatestData() {
     try {
-        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/latest.csv?t=${Date.now()}`;
+        const url = `./data/latest.csv?t=${Date.now()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const csv = await res.text();
@@ -1013,27 +1010,14 @@ async function loadAvailableMonths() {
     const months = new Set();
 
     try {
-        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/daily?ref=${encodeURIComponent(BRANCH)}`;
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetch(`./data/months.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
         if (Array.isArray(data)) {
-            data.forEach(item => {
-                if (item.type === 'dir' && parseMonthStr(item.name)) {
-                    months.add(item.name);
-                    return;
-                }
-
-                // 구버전 구조: data/daily/2026-09-15.csv
-                const match = item.type === 'file'
-                    ? item.name.match(/^(\d{4})-(\d{2})-\d{2}\.csv$/)
-                    : null;
-                if (match) months.add(`${Number(match[1])}년${Number(match[2])}월`);
-            });
+            data.forEach(month => { if (parseMonthStr(month)) months.add(month); });
         }
     } catch(e) {
-        // GitHub API 제한이 걸려도 latest.csv를 기준으로 페이지는 계속 동작한다.
+        // 월 목록을 읽지 못해도 최신 데이터의 월은 표시한다.
         console.error('months error', e);
     }
 
@@ -1048,7 +1032,7 @@ async function loadSeasonCatalog() {
     selectedSeasonId = '';
 
     try {
-        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/seasons.json?t=${Date.now()}`;
+        const url = `./data/seasons.json?t=${Date.now()}`;
         const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) throw new Error(`catalog HTTP ${response.status}`);
         const data = await response.json();
@@ -1094,14 +1078,14 @@ async function loadSeasonData(seasonId = selectedSeasonId) {
     try {
         const catalogItem = seasons.find(item => item.id === seasonId);
         const basePath = catalogItem?.dataPath || (seasonId ? `data/seasons/${encodeURIComponent(seasonId)}` : 'data');
-        const statusUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${basePath}/season_status.json?t=${Date.now()}`;
+        const statusUrl = `./${basePath}/season_status.json?t=${Date.now()}`;
         const statusResponse = await fetch(statusUrl, { cache: 'no-store' });
         if (!statusResponse.ok) throw new Error(`status HTTP ${statusResponse.status}`);
         seasonStatus = await statusResponse.json();
 
         if (!['before', 'active', 'ended'].includes(seasonStatus?.status)) return;
 
-        const csvUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${basePath}/season.csv?t=${Date.now()}`;
+        const csvUrl = `./${basePath}/season.csv?t=${Date.now()}`;
         const csvResponse = await fetch(csvUrl, { cache: 'no-store' });
         if (!csvResponse.ok) throw new Error(`CSV HTTP ${csvResponse.status}`);
         seasonData = normalizeSeasonRows(parseCSV(await csvResponse.text()));
@@ -1274,7 +1258,7 @@ function getField(row, aliases) {
 
 function normalizeStepRows(rows) {
     return rows.map(row => {
-        const monthlyTotal = getField(row, ['월누적', '월간누적', '월 누적', '월간 누적']);
+        const monthlyTotal = getField(row, ['월집계누적', '월누적', '월간누적', '월 누적', '월간 누적']);
         return {
             ...row,
             '순위': getField(row, ['순위', 'rank', 'Rank']),
@@ -1525,9 +1509,7 @@ function changeMonth(dir) {
     currentMonthIdx = next;
     updatePeriodUI();
 
-    // 월이 바뀌면 해당 월의 latest를 로드해야 하지만,
-    // latest.csv는 현재 월만 반영. 과거 월은 daily CSV 합산 필요.
-    // 우선 현재 월은 latest.csv 사용, 과거 월은 마지막 날 daily CSV 사용
+    // 과거 월은 마지막 스냅샷에 저장된 일별 차이의 합계를 사용한다.
     loadMonthData().then(render);
 }
 
@@ -1540,7 +1522,7 @@ async function loadMonthData() {
         // latest.csv가 실제로 담고 있는 월의 데이터
         await loadLatestData();
     } else {
-        // 해당 월의 가장 최근 daily CSV에서 월누적 읽기
+        // 해당 월의 가장 최근 daily CSV에서 월집계누적 읽기
         const lastDay = new Date(parsed.year, parsed.month, 0).getDate();
         let loaded = false;
 
@@ -1553,7 +1535,7 @@ async function loadMonthData() {
             ];
 
             for (const path of paths) {
-                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${path}?t=${Date.now()}`;
+                const url = `./${path}?t=${Date.now()}`;
                 try {
                     const res = await fetch(url, { cache: 'no-store' });
                     if (res.ok) {
@@ -1839,7 +1821,7 @@ function historyDateToISO(value, year, month) {
 async function loadMemberHistoryFile(name, year, month) {
     const monthString = `${year}년${month}월`;
     const fileName = encodeURIComponent(`${safeMemberFilename(name)}_${monthString}_Data.csv`);
-    const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/members/${fileName}?t=${Date.now()}`;
+    const url = `./data/members/${fileName}?t=${Date.now()}`;
 
     try {
         const response = await fetch(url, { cache: 'no-store' });

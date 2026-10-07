@@ -10,13 +10,17 @@
   "expectedDays": 37,
   "availableDays": 37,
   "missingDates": [],
-  "unknownValueCount": 137,
+  "unknownValueCount": 163,
   "unknownDates": [
+    "2026-09-04",
+    "2026-09-06",
+    "2026-09-11",
+    "2026-09-14",
     "2026-09-16",
     "2026-09-20",
     "2026-09-26",
     "2026-09-29",
-    "2026-10-03"
+    "2026-10-01"
   ],
   "complete": false,
   "teams": [
@@ -49,5 +53,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-10-07T13:01:24.098271+09:00"
+  "generatedAt": "2026-10-07T13:01:24+09:00"
 }

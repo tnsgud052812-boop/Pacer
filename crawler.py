@@ -1,7 +1,7 @@
 """Pacer 만보걷기 집계 크롤러.
 
-Pacer의 월 누적 걸음수를 수집하고, 전날 스냅샷과 비교해 당일 걸음수를
-계산한다. 같은 날 여러 번 실행해도 항상 전날 스냅샷을 기준으로 다시
+Pacer의 측정 누적값을 수집하고, 전날 스냅샷과 비교해 당일 걸음수를
+계산한 뒤 일별 차이를 월별/시즌별로 합산한다. 같은 날 여러 번 실행해도 전날 기준으로 다시
 계산하므로 당일 걸음수가 축소되지 않는다.
 """
 
@@ -210,7 +210,7 @@ def load_previous_day_totals(run_date: date) -> Dict[str, int]:
             reader = csv.DictReader(f)
             for row in reader:
                 name = row.get("이름", "").strip()
-                monthly_total = row.get("월간누적", row.get("월누적", ""))
+                monthly_total = row.get("측정누적", row.get("월간누적", row.get("월누적", "")))
                 if name and monthly_total not in (None, ""):
                     data[name] = parse_integer(monthly_total)
     except (OSError, ValueError, csv.Error) as error:
@@ -284,7 +284,7 @@ def save_daily_csv(members: List[Dict], run_date: date, crawl_time: datetime):
 
     with filename.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
-        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시"])
+        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시", "월집계누적"])
         
         for m in members:
             daily = m["daily_steps"] if m["daily_steps"] is not None else ""
@@ -292,11 +292,25 @@ def save_daily_csv(members: List[Dict], run_date: date, crawl_time: datetime):
                 m["rank"],
                 m["name"],
                 daily,
-                m["monthly_total"],
-                crawl_time_str
+                m["measured_total"],
+                crawl_time_str,
+                m["monthly_total"]
             ])
     
     print(f"일별 CSV 저장: {filename}")
+    save_available_months()
+
+
+def save_available_months():
+    """정적 웹 화면이 같은 배포의 월 목록을 읽도록 색인을 저장한다."""
+    months = set()
+    for snapshot in (DATA_DIR / "daily").rglob("*.csv"):
+        snapshot_date = date.fromisoformat(snapshot.stem)
+        months.add((snapshot_date.year, snapshot_date.month))
+    month_names = [f"{year}년{month}월" for year, month in sorted(months, reverse=True)]
+    (DATA_DIR / "months.json").write_text(
+        json.dumps(month_names, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def save_latest(members: List[Dict], crawl_time: datetime):
@@ -307,7 +321,7 @@ def save_latest(members: List[Dict], crawl_time: datetime):
     filename = DATA_DIR / "latest.csv"
     with filename.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
-        writer.writerow(["순위", "이름", "오늘걸음수", "월누적", "크롤링일시"])
+        writer.writerow(["순위", "이름", "오늘걸음수", "월누적", "크롤링일시", "측정누적"])
         
         for m in members:
             daily = m["daily_steps"] if m["daily_steps"] is not None else ""
@@ -316,7 +330,8 @@ def save_latest(members: List[Dict], crawl_time: datetime):
                 m["name"],
                 daily,
                 m["monthly_total"],
-                crawl_time_str
+                crawl_time_str,
+                m["measured_total"]
             ])
     
     print("latest.csv 저장 완료")
@@ -667,13 +682,32 @@ def rebuild_season_summary(
     )
 
 
+def load_monthly_totals(run_date: date) -> Dict[str, int]:
+    """당일을 제외한 일별 차이를 합산해 재실행 중복을 방지한다."""
+    totals = {}
+    for snapshot_date in iter_dates(run_date.replace(day=1), run_date - timedelta(days=1)):
+        daily_result = load_daily_steps(snapshot_date)
+        if daily_result is None:
+            continue
+        for name, steps in daily_result[0].items():
+            totals[name] = totals.get(name, 0) + steps
+    return totals
+
+
 def calculate_daily_steps(
     today_data: List[Dict],
     previous_day_data: Dict[str, int],
     run_date: date,
 ) -> List[Dict]:
-    """전날 월 누적과 오늘 월 누적의 차이로 당일 걸음수 계산."""
+    """측정값의 전일 차이를 계산하고 그 차이를 월별로 합산한다."""
     result = []
+    monthly_totals = load_monthly_totals(run_date)
+    corrections_path = DATA_DIR / "statistics_corrections.json"
+    corrections = {}
+    if corrections_path.exists():
+        with corrections_path.open(encoding="utf-8") as source:
+            corrections = json.load(source)
+    correction = corrections.get(run_date.isoformat(), {})
     
     for member in today_data:
         name = member["name"]
@@ -681,12 +715,19 @@ def calculate_daily_steps(
         previous_total = previous_day_data.get(name)
 
         # 일별 걸음수 계산
-        if run_date.day == 1:
-            # 월 누적이 초기화되는 매월 1일
+        if correction.get("exclude"):
+            # 이전 달 측정값으로 확인되어 일별 통계에서 제외한 날짜.
+            daily_steps = None
+        elif correction.get("monthly_reset"):
+            # 확인된 늦은 월 초기화: 이전 날까지의 값과 차감하지 않는다.
+            # 여러 날이 포함된 누적값으로, 개별 활동일의 걸음수는 아니다.
             daily_steps = today_total
         elif previous_total is None:
             # 전날 자료가 없으면 월 누적만으로 당일 걸음수를 알 수 없다.
             daily_steps = None
+        elif today_total < previous_total and run_date.day <= 2:
+            # 월 초기화가 1일 측정 이후 반영되는 경우도 처리한다.
+            daily_steps = today_total
         elif today_total < previous_total:
             # 같은 달에 누적값이 감소하면 API/사용자 데이터가 수정된 경우다.
             print(
@@ -701,7 +742,8 @@ def calculate_daily_steps(
             "rank": member["rank"],
             "name": name,
             "daily_steps": daily_steps,
-            "monthly_total": today_total
+            "monthly_total": monthly_totals.get(name, 0) + (daily_steps or 0),
+            "measured_total": today_total
         })
     
     return result
