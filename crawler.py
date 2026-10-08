@@ -123,7 +123,7 @@ def migrate_old_daily_files():
         print(f"📁 기존 파일 {moved_count}개 정리 완료")
 
 
-def crawl_pacer_data() -> List[Dict]:
+def crawl_pacer_data(trace=None) -> List[Dict]:
     """Pacer API에서 전체 멤버 데이터 크롤링"""
     all_members = []
     
@@ -142,6 +142,13 @@ def crawl_pacer_data() -> List[Dict]:
         for _page_number in range(1, MAX_PAGES + 1):
             url = f"{BASE_URL}/{GROUP_ID}?anchor={anchor}"
             response = session.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+            if trace is not None:
+                trace.append({
+                    "anchor": anchor,
+                    "received_at": get_kst_now().isoformat(),
+                    "status_code": response.status_code,
+                    "body": response.text,
+                })
             response.raise_for_status()
             data = response.json()
 
@@ -284,7 +291,7 @@ def save_daily_csv(members: List[Dict], run_date: date, crawl_time: datetime):
 
     with filename.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
-        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시", "월집계누적"])
+        writer.writerow(["순위", "이름", "오늘걸음수", "월간누적", "크롤링일시", "월집계누적", "집계반영분", "집계상태"])
         
         for m in members:
             daily = m["daily_steps"] if m["daily_steps"] is not None else ""
@@ -294,7 +301,9 @@ def save_daily_csv(members: List[Dict], run_date: date, crawl_time: datetime):
                 daily,
                 m["measured_total"],
                 crawl_time_str,
-                m["monthly_total"]
+                m["monthly_total"],
+                m.get("contribution", daily) if m.get("contribution", daily) is not None else "",
+                m.get("quality", "confirmed" if m["daily_steps"] is not None else "unknown")
             ])
     
     print(f"일별 CSV 저장: {filename}")
@@ -411,6 +420,7 @@ def load_daily_steps(snapshot_date: date):
 
     steps = {}
     unknown_names = []
+    row_count = 0
     try:
         with filename.open("r", encoding="utf-8-sig", newline="") as f:
             reader = csv.DictReader(f)
@@ -418,20 +428,25 @@ def load_daily_steps(snapshot_date: date):
                 name = str(row.get("이름", row.get("성명", ""))).strip()
                 if not name:
                     continue
+                row_count += 1
 
                 raw_steps = row.get(
                     "오늘걸음수",
                     row.get("오늘 걸음수", row.get("일일걸음수", row.get("일일 걸음수", ""))),
                 )
                 daily_steps = parse_optional_integer(raw_steps)
+                contribution = parse_optional_integer(row.get("집계반영분", raw_steps))
+                if contribution is not None and contribution >= 0:
+                    steps[name] = contribution
                 if daily_steps is None or daily_steps < 0:
                     unknown_names.append(name)
                     continue
-                steps[name] = daily_steps
+                if row.get("집계상태") not in (None, "", "confirmed"):
+                    unknown_names.append(name)
     except (OSError, ValueError, csv.Error) as error:
         raise RuntimeError(f"일별 시즌 데이터 로드 실패 ({filename}): {error}") from error
 
-    return steps, unknown_names
+    return (steps, unknown_names) if row_count else None
 
 
 def write_season_pair(
@@ -629,6 +644,16 @@ def rebuild_season_summary(
 
         available_days += 1
         daily_steps, unknown_names = daily_result
+        adjustment_file = DATA_DIR / "adjustments" / f"{snapshot_date.isoformat()}.json"
+        if adjustment_file.exists():
+            adjustments = json.loads(adjustment_file.read_text(encoding="utf-8"))
+            for adjustment in adjustments:
+                # 시즌 시작 전 활동까지 포함된 기간 누적분은 배분할 근거가 없다.
+                if date.fromisoformat(adjustment["period_start"]) < start_date:
+                    name = adjustment["name"]
+                    daily_steps.pop(name, None)
+                    if name not in unknown_names:
+                        unknown_names.append(name)
         if unknown_names:
             unknown_dates.add(snapshot_date.isoformat())
             unknown_value_count += len(unknown_names)

@@ -1,4 +1,4 @@
-name: Pacer 일별 크롤링
+name: Pacer 시간별 원본 수집 및 자정 집계
 
 on:
   # 수동 실행
@@ -7,10 +7,11 @@ on:
 # 크롤링 결과를 저장소에 커밋할 수 있도록 쓰기 권한 부여
 permissions:
   contents: write
+  pages: write
 
 # 예약 실행과 수동 실행이 겹치는 것을 방지
 concurrency:
-  group: pacer-daily-crawl
+  group: pacer-hourly-archive
   cancel-in-progress: false
 
 jobs:
@@ -24,6 +25,9 @@ jobs:
     steps:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Python 설정
         uses: actions/setup-python@v5
@@ -33,10 +37,12 @@ jobs:
       - name: 패키지 설치
         run: python -m pip install requests
 
-      - name: 크롤링 실행
-        run: python crawler.py
+      - name: 시간별 원본 저장 및 종료 날짜 집계
+        id: collect
+        continue-on-error: true
+        run: python hourly_pipeline.py
 
-      - name: 결과 커밋 및 푸시
+      - name: 공개 통계 커밋 및 푸시
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -48,6 +54,16 @@ jobs:
             exit 0
           fi
 
-          git commit -m "$(date +'%Y-%m-%d') Pacer 데이터 업데이트"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git commit -m "$(date +'%Y-%m-%d') Pacer 종료 날짜 통계 업데이트"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+          # GITHUB_TOKEN의 push는 다른 workflow/Pages 자동 빌드를 유발하지 않는다.
+          # 기존 main 브랜치 기반 Pages 사이트에 명시적으로 빌드를 요청한다.
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 수집 실패 표시
+        if: steps.collect.outcome == 'failure'
+        run: exit 1

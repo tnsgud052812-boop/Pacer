@@ -946,6 +946,7 @@ let seasons = [];
 let selectedSeasonId = '';
 let seasonData = [];
 let seasonStatus = null;
+let checkpointStatus = null;
 let viewMode = 'monthly';
 let activeTab = 'teams';
 let companyRankingOpen = false;
@@ -955,7 +956,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
     await loadConfig();
     await loadLatestData();
-    await Promise.all([loadAvailableMonths(), loadSeasonCatalog()]);
+    await Promise.all([loadAvailableMonths(), loadSeasonCatalog(), loadCheckpointStatus()]);
     currentMonthIdx = 0; // newest
 
     if (hasSeasonView()) {
@@ -1025,6 +1026,15 @@ async function loadAvailableMonths() {
     if (!months.size) months.add(getCurrentKSTMonth());
 
     availableMonths = [...months].sort((a, b) => monthSortValue(b) - monthSortValue(a));
+}
+
+async function loadCheckpointStatus() {
+    try {
+        const response = await fetch(`./data/checkpoint_status.json?t=${Date.now()}`, { cache: 'no-store' });
+        checkpointStatus = response.ok ? await response.json() : null;
+    } catch (error) {
+        checkpointStatus = null;
+    }
 }
 
 async function loadSeasonCatalog() {
@@ -1461,6 +1471,9 @@ function updatePeriodUI() {
         document.getElementById('companyRankTotalLabel').textContent = '월 누적';
         document.getElementById('companyRankAvgLabel').textContent = '하루 평균';
         document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
+        if (checkpointStatus && getSelectedMonth() === checkpointStatus.date.slice(0, 7).replace(/^(\d+)-(\d+)$/, (_, y, m) => `${Number(y)}년${Number(m)}월`)) {
+            document.getElementById('dataNotice').textContent += ` 기준일 ${checkpointStatus.date} · ${checkpointStatus.status === 'confirmed' ? '기준점 집계 완료' : '잠정/미확정 자료 포함'} · 마지막 측정 ${checkpointStatus.measured_at ? formatTimestamp(checkpointStatus.measured_at) : '없음'}`;
+        }
     }
     updateCompanyRankingUI();
 }
@@ -1483,6 +1496,9 @@ function getSeasonUnavailableMessage() {
 function updateSeasonNotice() {
     const notice = document.getElementById('dataNotice');
     notice.textContent = `📅 시즌 집계 기간: ${seasonStatus.startDate} ~ ${seasonStatus.endDate}`;
+    if (!seasonStatus.complete) {
+        notice.textContent += ' · ⚠️ 미확정 일별 값 또는 기간 누적분이 포함된 잠정 통계입니다.';
+    }
 }
 
 async function switchViewMode(mode) {

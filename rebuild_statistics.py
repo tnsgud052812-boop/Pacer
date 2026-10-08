@@ -5,6 +5,7 @@
 """
 
 import csv
+import json
 from contextlib import redirect_stdout
 from io import StringIO
 
@@ -20,6 +21,20 @@ def rebuild():
         run_date = crawler.date.fromisoformat(path.stem)
         with path.open(encoding="utf-8-sig", newline="") as source:
             rows = list(csv.DictReader(source))
+        checkpoint = crawler.DATA_DIR / "checkpoints" / f"{run_date.isoformat()}.json"
+        if checkpoint.exists():
+            # 시간별 파이프라인의 확정 기준점/기간 누적분을 구형 방식으로 덮어쓰지 않는다.
+            status = json.loads(checkpoint.read_text(encoding="utf-8"))
+            latest_time = crawler.datetime.fromisoformat(status["measured_at"]) if status["measured_at"] else crawler.datetime.combine(run_date, crawler.datetime.min.time()).replace(tzinfo=crawler.KST)
+            latest_members = [{
+                "rank": crawler.parse_integer(row["순위"]), "name": row["이름"],
+                "daily_steps": crawler.parse_optional_integer(row["오늘걸음수"]),
+                "measured_total": crawler.parse_integer(row["월간누적"]),
+                "monthly_total": crawler.parse_integer(row["월집계누적"]),
+                "contribution": crawler.parse_optional_integer(row.get("집계반영분")),
+                "quality": row.get("집계상태", "unknown"),
+            } for row in rows]
+            continue
         if not rows:
             continue
         # 월간누적은 API 측정 원본이며 월집계누적과 구분한다.
