@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "cutoff": "2026-10-09T00:00:00+09:00",
+  "finalized_at": "2026-10-09T00:01:16.680536+09:00",
+  "source": "raw/2026/10/08/20261008T230115775837+0900_37789009980_67e87625f552.json.gz",
+  "source_commit": "b0120db5428d406e27ed1b7252bc9ebaf19326ba",
+  "measured_at": "2026-10-08T23:01:16.033984+09:00",
+  "observation_count": 12,
+  "complete_observation_count": 12,
+  "ambiguous_names": [
+    "강소이",
+    "고진환"
+  ],
+  "status": "provisional"
+}
