@@ -176,9 +176,31 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(len(next(iter(self.store.data.values()))["pages"]), 1)
 
     def test_duplicate_names_are_archived_but_not_aggregated(self):
-        members = [{"rank": 1, "name": "동명", "steps": 100}] * 2
+        members = [{"rank": 1, "name": "동명", "steps": 100}, {"rank": 2, "name": "동명", "steps": 0},
+                   {"rank": 3, "name": "테스트", "steps": 250}]
+        self.baseline(date(2026, 10, 7), {"동명": 50, "테스트": 200})
         with patch.object(crawler, "crawl_pacer_data", return_value=members), patch.object(crawler, "get_kst_now", return_value=moment("2026-10-08T14:00:01")):
-            self.assertEqual(pipeline.collect(self.store, moment("2026-10-08T14:00:00"))["status"], "failed")
+            observation = pipeline.collect(self.store, moment("2026-10-08T14:00:00"))
+        self.assertEqual(observation["status"], "complete")
+        self.assertEqual(observation["ambiguous_names"], ["동명"])
+        self.assertEqual(len(observation["members"]), 3)
+        checkpoint, results, _ = pipeline.summarize_day(self.store, date(2026, 10, 8), self.store.records(), moment("2026-10-09T00:00:00"))
+        by_name = {member["name"]: member for member in results}
+        self.assertEqual(by_name["테스트"]["daily_steps"], 50)
+        self.assertIsNone(by_name["동명"]["daily_steps"])
+        self.assertIsNone(by_name["동명"]["contribution"])
+        self.assertEqual(checkpoint["members"]["동명"]["measured_total"], 50)
+
+    def test_legacy_duplicate_failure_is_reusable_but_partial_failure_is_not(self):
+        record = {"status": "failed", "error": "빈 결과 또는 중복 이름: 일별 집계에 사용하지 않습니다.",
+                  "members": [{"name": "동명", "steps": 100}] * 2,
+                  "pages": [{"status_code": 200, "body": json.dumps({"success": True, "data": {"rank_list": [], "paging": {"has_more": False}}})}]}
+        self.assertTrue(pipeline.usable_observation(record))
+        record["pages"][0]["status_code"] = 500
+        self.assertFalse(pipeline.usable_observation(record))
+        record["pages"][0]["status_code"] = 200
+        record["pages"][0]["body"] = json.dumps({"success": True, "data": {"rank_list": [1], "paging": {"has_more": True}}})
+        self.assertFalse(pipeline.usable_observation(record))
 
     def test_observation_changes_show_update_time_window(self):
         self.store.add("2026-10-08T13:00:00", {"테스트": 100})

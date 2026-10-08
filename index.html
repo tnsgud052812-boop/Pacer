@@ -1473,6 +1473,9 @@ function updatePeriodUI() {
         document.getElementById('dataNotice').textContent = '⚠️ Pacer 앱 동기화가 늦어지면 통계가 달라질 수 있습니다. 매일 앱을 실행해 주세요.';
         if (checkpointStatus && getSelectedMonth() === checkpointStatus.date.slice(0, 7).replace(/^(\d+)-(\d+)$/, (_, y, m) => `${Number(y)}년${Number(m)}월`)) {
             document.getElementById('dataNotice').textContent += ` 기준일 ${checkpointStatus.date} · ${checkpointStatus.status === 'confirmed' ? '기준점 집계 완료' : '잠정/미확정 자료 포함'} · 마지막 측정 ${checkpointStatus.measured_at ? formatTimestamp(checkpointStatus.measured_at) : '없음'}`;
+            if (checkpointStatus.ambiguous_names?.length) {
+                document.getElementById('dataNotice').textContent += ` · 동명이인 집계 보류: ${checkpointStatus.ambiguous_names.join(', ')}`;
+            }
         }
     }
     updateCompanyRankingUI();

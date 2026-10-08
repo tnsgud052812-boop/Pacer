@@ -1,6 +1,7 @@
 """시간별 원본은 measurements 브랜치, 종료된 날짜의 통계는 data/에 저장."""
 
 import argparse
+from collections import Counter
 import gzip
 import json
 import os
@@ -12,6 +13,29 @@ from datetime import datetime, time, timedelta
 from pathlib import Path
 
 import crawler
+
+
+def unique_members(observation):
+    """원본 행은 보존하고 비교 가능한 이름만 별도로 골라낸다."""
+    counts = Counter(member["name"] for member in observation.get("members", []))
+    return [member for member in observation.get("members", []) if counts[member["name"]] == 1], sorted(name for name, count in counts.items() if count > 1)
+
+
+def usable_observation(observation):
+    if observation.get("status") == "complete":
+        return True
+    # 이전 버전은 동명이인만으로 완료된 수집을 실패 처리했다. 원본은 수정하지 않는다.
+    if observation.get("error") != "빈 결과 또는 중복 이름: 일별 집계에 사용하지 않습니다." or not observation.get("members"):
+        return False
+    try:
+        pages = observation["pages"]
+        payloads = [json.loads(page["body"]) for page in pages]
+        if not pages or any(page.get("status_code") != 200 or not payload.get("success") for page, payload in zip(pages, payloads)):
+            return False
+        last = payloads[-1].get("data", {})
+        return not last.get("rank_list") or not last.get("paging", {}).get("has_more", True)
+    except (KeyError, TypeError, ValueError):
+        return False
 
 
 class MeasurementStore:
@@ -69,8 +93,10 @@ def collect(store, now=None):
     try:
         observation["members"] = crawler.crawl_pacer_data(trace=observation["pages"])
         names = [member["name"] for member in observation["members"]]
-        if not names or len(names) != len(set(names)):
-            raise RuntimeError("빈 결과 또는 중복 이름: 일별 집계에 사용하지 않습니다.")
+        if not names:
+            raise RuntimeError("빈 수집 결과: 일별 집계에 사용하지 않습니다.")
+        _members, ambiguous = unique_members(observation)
+        observation["ambiguous_names"] = ambiguous
         observation["status"] = "complete"
     except Exception as error:
         observation["status"] = "failed"
@@ -79,13 +105,13 @@ def collect(store, now=None):
     if observation["status"] == "complete":
         for previous_path in reversed(store.records()):
             previous = store.read(previous_path)
-            if previous.get("status") != "complete":
+            if not usable_observation(previous):
                 continue
-            old = {member["name"]: member["steps"] for member in previous["members"]}
+            old = {member["name"]: member["steps"] for member in unique_members(previous)[0]}
             observation["changes_since"] = {"source": previous_path, "observed_at": previous["finished_at"]}
             observation["changes"] = [
                 {"name": member["name"], "previous": old.get(member["name"]), "current": member["steps"]}
-                for member in observation["members"] if old.get(member["name"]) != member["steps"]
+                for member in unique_members(observation)[0] if old.get(member["name"]) != member["steps"]
             ]
             break
     stamp = started.strftime("%Y%m%dT%H%M%S%f%z")
@@ -127,7 +153,7 @@ def summarize_day(store, day, paths, finalized_at):
     end = datetime.combine(day + timedelta(days=1), time(), tzinfo=crawler.KST)
     records = [(path, store.read(path)) for path in paths]
     valid = [(path, record) for path, record in records
-             if record.get("status") == "complete"
+             if usable_observation(record)
              and datetime.fromisoformat(record["started_at"]).astimezone(crawler.KST).date() == day
              and datetime.fromisoformat(record["finished_at"]) < end]
     valid.sort(key=lambda pair: pair[1]["finished_at"])
@@ -141,12 +167,13 @@ def summarize_day(store, day, paths, finalized_at):
     inferred = set()
     last_values = {name: state["measured_total"] for name, state in previous.items()}
     for _path, observation in valid:
-        comparable = [m for m in observation["members"] if last_values.get(m["name"], 0) > 0]
+        identifiable = unique_members(observation)[0]
+        comparable = [m for m in identifiable if last_values.get(m["name"], 0) > 0]
         drops = [m for m in comparable if m["steps"] < last_values[m["name"]]]
         pending = [m for m in comparable if period_members.get(m["name"], {}).get("period") != month]
         # 소수 개인의 수정값을 전체 월 초기화로 오인하지 않는다.
         reset_candidate = len(comparable) >= 5 and len(drops) / len(comparable) >= 0.6 and bool(pending)
-        for member in observation["members"]:
+        for member in identifiable:
             name = member["name"]
             if reset_candidate and (any(m["name"] == name for m in drops)
                                     or member["steps"] == last_values.get(name) == 0):
@@ -163,7 +190,8 @@ def summarize_day(store, day, paths, finalized_at):
     baseline_gap = False
     known_periods = [state for state in period_members.values() if state.get("period") == month]
     cohort_has_current_month = len(known_periods) >= 5 and len(known_periods) > len(period_members) / 2
-    for member in selected[1]["members"] if selected else []:
+    identifiable, ambiguous = unique_members(selected[1]) if selected else ([], [])
+    for member in identifiable:
         name, total = member["name"], member["steps"]
         old = previous.get(name)
         state = period_members.get(name, {})
@@ -185,7 +213,7 @@ def summarize_day(store, day, paths, finalized_at):
             quality = "new_baseline"
         elif old and old.get("period") == month and total >= old["measured_total"]:
             contribution = total - old["measured_total"]
-            if old.get("quality") in ("missing", "stale"):
+            if old.get("quality") in ("missing", "stale", "ambiguous"):
                 quality = "gap_total"
                 baseline_gap = True
             else:
@@ -200,6 +228,15 @@ def summarize_day(store, day, paths, finalized_at):
         result.append({"rank": member["rank"], "name": name, "measured_total": total,
                        "daily_steps": daily, "contribution": contribution, "quality": quality,
                        "monthly_total": totals.get(name, 0) + (contribution or 0)})
+    for name in ambiguous:
+        old = previous.get(name)
+        if old:
+            states[name] = dict(old, quality="ambiguous")
+        rank = min(m["rank"] for m in selected[1]["members"] if m["name"] == name)
+        result.append({"rank": rank, "name": name, "measured_total": old["measured_total"] if old else None,
+                       "daily_steps": None, "contribution": None, "quality": "ambiguous",
+                       "monthly_total": totals.get(name, 0)})
+    result.sort(key=lambda member: member["rank"])
     if selected is None:
         states = {name: dict(state, quality="missing") for name, state in previous.items()}
         # 빈 날짜도 표시해 이전 월/날짜를 정상 최신값으로 오인하지 않게 한다.
@@ -207,6 +244,7 @@ def summarize_day(store, day, paths, finalized_at):
                   "finalized_at": finalized_at.isoformat(), "source": selected[0] if selected else None,
                   "source_commit": store.commit, "measured_at": measured_at.isoformat() if measured_at else None,
                   "observation_count": len(records), "complete_observation_count": len(valid),
+                  "ambiguous_names": ambiguous,
                   "status": "missing" if not selected else "provisional" if stale or baseline_gap or any(m["quality"] != "confirmed" for m in result) else "confirmed",
                   "members": states}
     return checkpoint, result, adjustments
@@ -277,6 +315,8 @@ def main():
                 record = store.read(path)
                 print(json.dumps({"source": path, "started_at": record["started_at"],
                                   "finished_at": record["finished_at"], "status": record["status"],
+                                  "usable_for_aggregation": usable_observation(record),
+                                  "ambiguous_names": unique_members(record)[1],
                                   "changes_since": record.get("changes_since"),
                                   "changes": record.get("changes", []), "error": record.get("error")}, ensure_ascii=False))
         return
