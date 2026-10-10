@@ -1,0 +1,708 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "cutoff": "2026-10-11T00:00:00+09:00",
+  "finalized_at": "2026-10-11T00:01:06.368326+09:00",
+  "source": "raw/2026/10/10/20261010T230132055491+0900_38057972542_0cf19a286289.json.gz",
+  "source_commit": "84dcc8b0f0458f786301c3da08a925e90c512dbd",
+  "measured_at": "2026-10-10T23:01:33.496326+09:00",
+  "observation_count": 24,
+  "complete_observation_count": 24,
+  "ambiguous_names": [
+    "강소이",
+    "고진환"
+  ],
+  "status": "provisional",
+  "members": {
+    "이경민": {
+      "measured_total": 199477,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이수경": {
+      "measured_total": 181256,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이도명": {
+      "measured_total": 132859,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김영관": {
+      "measured_total": 132446,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이강인": {
+      "measured_total": 122255,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "오학서": {
+      "measured_total": 120850,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박정호": {
+      "measured_total": 117528,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최현미": {
+      "measured_total": 108104,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "정세연": {
+      "measured_total": 104834,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최민설": {
+      "measured_total": 102424,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "성현준": {
+      "measured_total": 102204,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이선이": {
+      "measured_total": 97771,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "성열권": {
+      "measured_total": 96092,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "강병택": {
+      "measured_total": 93562,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "홍영선": {
+      "measured_total": 93423,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박현지": {
+      "measured_total": 92998,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이해진": {
+      "measured_total": 92577,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "권혁": {
+      "measured_total": 90591,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "훈프로젝트": {
+      "measured_total": 89668,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김승환": {
+      "measured_total": 88498,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박효정": {
+      "measured_total": 88343,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "설정수": {
+      "measured_total": 88233,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이덕하": {
+      "measured_total": 87254,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김모현": {
+      "measured_total": 85345,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "현종옥": {
+      "measured_total": 85239,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "원덕재": {
+      "measured_total": 84572,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김수형": {
+      "measured_total": 83451,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "강동화": {
+      "measured_total": 82395,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "허진용": {
+      "measured_total": 80930,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조대영": {
+      "measured_total": 80681,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "문용기(CAD팀)": {
+      "measured_total": 79176,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조성우": {
+      "measured_total": 77368,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "금동위": {
+      "measured_total": 76441,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김도윤": {
+      "measured_total": 76360,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "왕희찬": {
+      "measured_total": 75450,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "홍세리": {
+      "measured_total": 75404,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이건희(선행)": {
+      "measured_total": 74923,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김광진": {
+      "measured_total": 73811,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최종휘": {
+      "measured_total": 73108,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "임병근": {
+      "measured_total": 71934,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "윤성혁": {
+      "measured_total": 71188,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박준호": {
+      "measured_total": 70254,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "강태민": {
+      "measured_total": 68956,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "현아": {
+      "measured_total": 68895,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이종훈": {
+      "measured_total": 68512,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "양호성": {
+      "measured_total": 68283,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "민유정": {
+      "measured_total": 67835,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "윤현정": {
+      "measured_total": 66998,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김수지": {
+      "measured_total": 66733,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "심유석": {
+      "measured_total": 65921,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "유한새": {
+      "measured_total": 65150,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "정재현": {
+      "measured_total": 64871,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조현정": {
+      "measured_total": 63987,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조기명": {
+      "measured_total": 63805,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김수영": {
+      "measured_total": 63787,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "yongtaek sim": {
+      "measured_total": 63287,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박성우": {
+      "measured_total": 61513,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이범희": {
+      "measured_total": 60900,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최수지": {
+      "measured_total": 60658,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이슬": {
+      "measured_total": 60182,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박윤중": {
+      "measured_total": 59636,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "정연석": {
+      "measured_total": 59318,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "황성민": {
+      "measured_total": 58792,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "정욱": {
+      "measured_total": 57859,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김병섭": {
+      "measured_total": 57524,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이은숙": {
+      "measured_total": 57191,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "탁유석": {
+      "measured_total": 57088,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "문창훈": {
+      "measured_total": 56565,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이지연": {
+      "measured_total": 55771,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "도은정": {
+      "measured_total": 55769,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김성익": {
+      "measured_total": 54877,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "권준현": {
+      "measured_total": 54744,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "송두익": {
+      "measured_total": 54506,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "백종구": {
+      "measured_total": 53805,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박세욱": {
+      "measured_total": 53569,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이인수": {
+      "measured_total": 52907,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김태훈": {
+      "measured_total": 52262,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김병수": {
+      "measured_total": 51622,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김수민": {
+      "measured_total": 51594,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이두리": {
+      "measured_total": 51437,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조민경": {
+      "measured_total": 51264,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "심향욱": {
+      "measured_total": 50450,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "한동희": {
+      "measured_total": 50373,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "장순형": {
+      "measured_total": 49701,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "채종현": {
+      "measured_total": 49695,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이원재": {
+      "measured_total": 48641,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최형철": {
+      "measured_total": 48568,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김진희": {
+      "measured_total": 48484,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김민수": {
+      "measured_total": 48195,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "노혜정": {
+      "measured_total": 47901,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김은덕": {
+      "measured_total": 46744,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박초희": {
+      "measured_total": 46579,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "윤경식": {
+      "measured_total": 46441,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "정나눔": {
+      "measured_total": 45972,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "전하영": {
+      "measured_total": 45511,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김고운": {
+      "measured_total": 45136,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "신나래": {
+      "measured_total": 45065,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조설미": {
+      "measured_total": 44934,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이진헌": {
+      "measured_total": 44662,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "권상혁": {
+      "measured_total": 44275,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김혜영": {
+      "measured_total": 44232,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "고동준": {
+      "measured_total": 43732,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최효림": {
+      "measured_total": 43712,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김이랑": {
+      "measured_total": 41349,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이승환": {
+      "measured_total": 40207,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "지현영": {
+      "measured_total": 38258,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "임도윤": {
+      "measured_total": 36504,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이건희": {
+      "measured_total": 36060,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "오승연": {
+      "measured_total": 34585,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "최성훈": {
+      "measured_total": 33750,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김향민": {
+      "measured_total": 32825,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이현주": {
+      "measured_total": 32646,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "신승민": {
+      "measured_total": 31688,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "한상규": {
+      "measured_total": 30825,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "유수옥": {
+      "measured_total": 30640,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이도형": {
+      "measured_total": 30463,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김은량": {
+      "measured_total": 29736,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "허영": {
+      "measured_total": 26240,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "우효승": {
+      "measured_total": 16141,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김종환": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이성훈": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김아나": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이세훈": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "박정길": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "류영덕": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이원준": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "백승민": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "추은혜": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이정환": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김정민": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김정규": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "이소영": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "강남현": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "조상문": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "김덕원": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "전지윤": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "confirmed"
+    },
+    "강소이": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "ambiguous"
+    },
+    "고진환": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "ambiguous"
+    }
+  }
+}
