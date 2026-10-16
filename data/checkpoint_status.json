@@ -1,16 +1,17 @@
 {
   "version": 1,
-  "date": "2026-10-15",
-  "cutoff": "2026-10-16T00:00:00+09:00",
-  "finalized_at": "2026-10-16T00:01:40.618671+09:00",
-  "source": "raw/2026/10/15/20261015T230130891386+0900_38747689864_9147bcd979e3.json.gz",
-  "source_commit": "b2f00ea4be121bff469252af3e5e662c05b6d051",
-  "measured_at": "2026-10-15T23:01:32.120155+09:00",
+  "date": "2026-10-16",
+  "cutoff": "2026-10-17T00:00:00+09:00",
+  "finalized_at": "2026-10-17T00:00:52.221136+09:00",
+  "source": "raw/2026/10/16/20261016T230058830005+0900_38912324651_47fe793c4a78.json.gz",
+  "source_commit": "b6525df589541cb5378d4c1ff97c62bd02e6ca8a",
+  "measured_at": "2026-10-16T23:00:59.242564+09:00",
   "observation_count": 24,
   "complete_observation_count": 24,
   "ambiguous_names": [
     "강소이",
-    "고진환"
+    "고진환",
+    "이세훈"
   ],
   "status": "provisional"
 }
