@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "date": "2026-10-31",
-  "cutoff": "2026-11-01T00:00:00+09:00",
-  "finalized_at": "2026-11-01T00:00:47.995084+09:00",
-  "source": "raw/2026/10/31/20261031T230044486669+0900_41208112548_06d0082c4048.json.gz",
-  "source_commit": "ece8237ae6fd594e04a9e25dcf81153f76c360dd",
-  "measured_at": "2026-10-31T23:00:45.713224+09:00",
+  "date": "2026-11-01",
+  "cutoff": "2026-11-02T00:00:00+09:00",
+  "finalized_at": "2026-11-02T00:00:40.876071+09:00",
+  "source": "raw/2026/11/01/20261101T230040366673+0900_41313998201_6d32616058b1.json.gz",
+  "source_commit": "f19069df8ff891fac548b4b99c6156781c21dfe6",
+  "measured_at": "2026-11-01T23:00:40.869196+09:00",
   "observation_count": 24,
   "complete_observation_count": 24,
   "ambiguous_names": [
