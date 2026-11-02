@@ -1,0 +1,940 @@
+[
+  {
+    "name": "이경민",
+    "amount": 45204,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이수경",
+    "amount": 32966,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "오학서",
+    "amount": 30345,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이선이",
+    "amount": 24874,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이도명",
+    "amount": 24747,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최현미",
+    "amount": 19793,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이원재",
+    "amount": 18996,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "강동화",
+    "amount": 18694,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "설정수",
+    "amount": 18155,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김영관",
+    "amount": 17422,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조대영",
+    "amount": 17202,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이강인",
+    "amount": 17069,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "홍영선",
+    "amount": 16530,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "정재현",
+    "amount": 16210,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최민설",
+    "amount": 16087,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이해진",
+    "amount": 15508,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김승환",
+    "amount": 15489,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "민유정",
+    "amount": 15450,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "허진용",
+    "amount": 15428,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김모현",
+    "amount": 15421,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김정규",
+    "amount": 15114,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박정호",
+    "amount": 14936,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "현종옥",
+    "amount": 14796,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박효정",
+    "amount": 14725,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "성현준",
+    "amount": 14377,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김태훈",
+    "amount": 14318,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이종훈",
+    "amount": 13816,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김혜영",
+    "amount": 13546,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "현아",
+    "amount": 13310,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "강병택",
+    "amount": 13102,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "한동희",
+    "amount": 12137,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이원준",
+    "amount": 11872,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "정욱",
+    "amount": 11401,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김민수",
+    "amount": 11346,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김병섭",
+    "amount": 11256,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이덕하",
+    "amount": 11208,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김광진",
+    "amount": 11191,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "왕희찬",
+    "amount": 10810,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박현지",
+    "amount": 10300,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "탁유석",
+    "amount": 10240,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김수지",
+    "amount": 10147,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김수영",
+    "amount": 9860,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김아나",
+    "amount": 9782,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "윤성혁",
+    "amount": 9775,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조기명",
+    "amount": 9659,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "황성민",
+    "amount": 9604,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조설미",
+    "amount": 9602,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "심유석",
+    "amount": 9558,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박준호",
+    "amount": 9483,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "정세연",
+    "amount": 9374,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "지현영",
+    "amount": 8964,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "장순형",
+    "amount": 8740,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이인수",
+    "amount": 8735,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "양호성",
+    "amount": 8703,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최성훈",
+    "amount": 8543,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김진희",
+    "amount": 8440,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이슬",
+    "amount": 8404,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김은량",
+    "amount": 8369,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "yongtaek sim",
+    "amount": 8350,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김병수",
+    "amount": 8268,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "도은정",
+    "amount": 8121,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "윤현정",
+    "amount": 8106,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박성우",
+    "amount": 8031,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "고동준",
+    "amount": 7947,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박세욱",
+    "amount": 7894,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "임병근",
+    "amount": 7726,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "정나눔",
+    "amount": 7687,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박초희",
+    "amount": 7640,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최종휘",
+    "amount": 7596,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이건희(선행)",
+    "amount": 7578,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조성우",
+    "amount": 7200,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "문창훈",
+    "amount": 6967,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "권혁",
+    "amount": 6967,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박윤중",
+    "amount": 6804,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김성익",
+    "amount": 6753,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "임도윤",
+    "amount": 6709,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "권준현",
+    "amount": 6145,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "금동위",
+    "amount": 6137,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이지연",
+    "amount": 6132,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이진헌",
+    "amount": 5913,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이건희",
+    "amount": 5844,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최수지",
+    "amount": 5787,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김고운",
+    "amount": 5762,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조현정",
+    "amount": 5760,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이현주",
+    "amount": 5660,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이범희",
+    "amount": 5641,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "전하영",
+    "amount": 5421,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이승환",
+    "amount": 5407,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김은덕",
+    "amount": 5405,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최형철",
+    "amount": 5191,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "문용기(CAD팀)",
+    "amount": 5163,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "최효림",
+    "amount": 5020,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "성열권",
+    "amount": 4986,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "홍세리",
+    "amount": 4865,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "오승연",
+    "amount": 4334,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "신나래",
+    "amount": 4047,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "권상혁",
+    "amount": 3993,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "강태민",
+    "amount": 3977,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "정연석",
+    "amount": 3773,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "채종현",
+    "amount": 3604,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조민경",
+    "amount": 3594,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "우효승",
+    "amount": 3044,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "유수옥",
+    "amount": 2863,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김수형",
+    "amount": 2647,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "허영",
+    "amount": 2537,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "백종구",
+    "amount": 2353,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김향민",
+    "amount": 1864,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "추은혜",
+    "amount": 1081,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "심향욱",
+    "amount": 1004,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "노혜정",
+    "amount": 23,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "원덕재",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "유한새",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김종환",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이성훈",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "박정길",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "류영덕",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "백승민",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "한상규",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이정환",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김정민",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "신승민",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이소영",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김수민",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김도윤",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "강남현",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이도형",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "조상문",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김덕원",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "전지윤",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "윤경식",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이은숙",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "송두익",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "김이랑",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  },
+  {
+    "name": "이두리",
+    "amount": 0,
+    "period_start": "2026-11-01",
+    "observed_at": "2026-11-02T23:01:10.583070+09:00",
+    "quality": "inferred_period_total"
+  }
+]
