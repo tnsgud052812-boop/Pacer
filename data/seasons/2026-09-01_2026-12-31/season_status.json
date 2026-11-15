@@ -6,11 +6,11 @@
   "seasonId": "2026-09-01_2026-12-31",
   "startDate": "2026-09-01",
   "endDate": "2026-12-31",
-  "asOfDate": "2026-11-14",
-  "expectedDays": 75,
-  "availableDays": 75,
+  "asOfDate": "2026-11-15",
+  "expectedDays": 76,
+  "availableDays": 76,
   "missingDates": [],
-  "unknownValueCount": 2138,
+  "unknownValueCount": 2274,
   "unknownDates": [
     "2026-09-04",
     "2026-09-06",
@@ -58,7 +58,8 @@
     "2026-11-11",
     "2026-11-12",
     "2026-11-13",
-    "2026-11-14"
+    "2026-11-14",
+    "2026-11-15"
   ],
   "complete": false,
   "teams": [
@@ -91,5 +92,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-11-15T00:00:27.334740+09:00"
+  "generatedAt": "2026-11-16T00:00:16.375688+09:00"
 }
