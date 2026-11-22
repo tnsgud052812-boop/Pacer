@@ -1,0 +1,699 @@
+{
+  "version": 1,
+  "date": "2026-11-22",
+  "cutoff": "2026-11-23T00:00:00+09:00",
+  "finalized_at": "2026-11-23T00:00:27.047931+09:00",
+  "source": "raw/2026/11/22/20261122T230023010781+0900_45030416359_2d16a99d1e11.json.gz",
+  "source_commit": "058695489d8a47eafe79f8eeb1a4c60cb4d8064b",
+  "measured_at": "2026-11-22T23:00:23.365480+09:00",
+  "observation_count": 24,
+  "complete_observation_count": 24,
+  "ambiguous_names": [
+    "강소이",
+    "고진환",
+    "이세훈"
+  ],
+  "status": "provisional",
+  "members": {
+    "이경민": {
+      "measured_total": 454653,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이수경": {
+      "measured_total": 405655,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이선이": {
+      "measured_total": 291144,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박정호": {
+      "measured_total": 290115,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이도명": {
+      "measured_total": 290009,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "오학서": {
+      "measured_total": 282854,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "홍영선": {
+      "measured_total": 266069,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최민설": {
+      "measured_total": 255151,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박효정": {
+      "measured_total": 250205,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "설정수": {
+      "measured_total": 245405,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "성현준": {
+      "measured_total": 235655,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "강병택": {
+      "measured_total": 231581,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김영관": {
+      "measured_total": 228684,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조상문": {
+      "measured_total": 228260,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "강동화": {
+      "measured_total": 224063,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최현미": {
+      "measured_total": 221990,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이강인": {
+      "measured_total": 221498,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김모현": {
+      "measured_total": 210428,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이해진": {
+      "measured_total": 210419,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조대영": {
+      "measured_total": 207115,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "허진용": {
+      "measured_total": 201014,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "문용기(CAD팀)": {
+      "measured_total": 196403,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박현지": {
+      "measured_total": 191856,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "정연석": {
+      "measured_total": 187416,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "양호성": {
+      "measured_total": 185733,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "현종옥": {
+      "measured_total": 185684,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "홍세리": {
+      "measured_total": 184548,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김성익": {
+      "measured_total": 179299,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김수영": {
+      "measured_total": 178834,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "윤성혁": {
+      "measured_total": 177993,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최종휘": {
+      "measured_total": 177987,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김병수": {
+      "measured_total": 177934,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "왕희찬": {
+      "measured_total": 168620,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최형철": {
+      "measured_total": 165958,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "민유정": {
+      "measured_total": 165619,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조성우": {
+      "measured_total": 164976,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박성우": {
+      "measured_total": 164037,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김수지": {
+      "measured_total": 163009,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "정재현": {
+      "measured_total": 161783,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이은숙": {
+      "measured_total": 159793,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이덕하": {
+      "measured_total": 156834,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "정세연": {
+      "measured_total": 156316,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이건희(선행)": {
+      "measured_total": 154490,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "성열권": {
+      "measured_total": 153970,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김병섭": {
+      "measured_total": 153422,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김승환": {
+      "measured_total": 152838,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김수형": {
+      "measured_total": 152801,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "황성민": {
+      "measured_total": 152463,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김도윤": {
+      "measured_total": 151795,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김진희": {
+      "measured_total": 148805,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이지연": {
+      "measured_total": 146826,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이종훈": {
+      "measured_total": 145933,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이슬": {
+      "measured_total": 144808,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김광진": {
+      "measured_total": 143904,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박준호": {
+      "measured_total": 142290,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "현아": {
+      "measured_total": 141751,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "심유석": {
+      "measured_total": 139523,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이인수": {
+      "measured_total": 138750,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "윤현정": {
+      "measured_total": 138165,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "심용택": {
+      "measured_total": 137588,
+      "period": "2026-11",
+      "quality": "confirmed"
+    },
+    "권준현": {
+      "measured_total": 136374,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이현주": {
+      "measured_total": 134502,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "정욱": {
+      "measured_total": 133561,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "심향욱": {
+      "measured_total": 133130,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이원재": {
+      "measured_total": 132212,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "도은정": {
+      "measured_total": 131640,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "장순형": {
+      "measured_total": 130874,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김수민": {
+      "measured_total": 130498,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김태훈": {
+      "measured_total": 130215,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "강태민": {
+      "measured_total": 128547,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "권상혁": {
+      "measured_total": 128181,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "금동위": {
+      "measured_total": 128068,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조현정": {
+      "measured_total": 127700,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "고동준": {
+      "measured_total": 125822,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "탁유석": {
+      "measured_total": 125778,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조설미": {
+      "measured_total": 122245,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "정나눔": {
+      "measured_total": 120859,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최수지": {
+      "measured_total": 120793,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김민수": {
+      "measured_total": 119656,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "한동희": {
+      "measured_total": 118379,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "전하영": {
+      "measured_total": 116964,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "지현영": {
+      "measured_total": 116136,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조민경": {
+      "measured_total": 115138,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박세욱": {
+      "measured_total": 112526,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김은덕": {
+      "measured_total": 111670,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김고운": {
+      "measured_total": 111077,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "문창훈": {
+      "measured_total": 110929,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박초희": {
+      "measured_total": 109956,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "추은혜": {
+      "measured_total": 109951,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "임도윤": {
+      "measured_total": 106328,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "송두익": {
+      "measured_total": 105756,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "노혜정": {
+      "measured_total": 104927,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이진헌": {
+      "measured_total": 104110,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이원준": {
+      "measured_total": 102227,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "임병근": {
+      "measured_total": 101872,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김향민": {
+      "measured_total": 99872,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최성훈": {
+      "measured_total": 97779,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "신나래": {
+      "measured_total": 97773,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이승환": {
+      "measured_total": 96946,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "윤경식": {
+      "measured_total": 96434,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김정규": {
+      "measured_total": 96003,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김은량": {
+      "measured_total": 95170,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박윤중": {
+      "measured_total": 94507,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "오승연": {
+      "measured_total": 84701,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "유한새": {
+      "measured_total": 84098,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "채종현": {
+      "measured_total": 81123,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이건희": {
+      "measured_total": 78836,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "백종구": {
+      "measured_total": 76442,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이범희": {
+      "measured_total": 74359,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "최효림": {
+      "measured_total": 73116,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김아나": {
+      "measured_total": 70609,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "유수옥": {
+      "measured_total": 68894,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이도형": {
+      "measured_total": 63736,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "허영": {
+      "measured_total": 55222,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "우효승": {
+      "measured_total": 47126,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "조기명": {
+      "measured_total": 45406,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "권혁": {
+      "measured_total": 38154,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "신승민": {
+      "measured_total": 17943,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "원덕재": {
+      "measured_total": 538,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김종환": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이성훈": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "박정길": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "류영덕": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "백승민": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "한상규": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이정환": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김정민": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이소영": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "강남현": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김덕원": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "전지윤": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "김이랑": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "이두리": {
+      "measured_total": 0,
+      "period": "2026-11",
+      "quality": "inferred_continuity"
+    },
+    "강소이": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "ambiguous"
+    },
+    "고진환": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "ambiguous"
+    },
+    "이세훈": {
+      "measured_total": 0,
+      "period": "2026-10",
+      "quality": "ambiguous"
+    }
+  }
+}
